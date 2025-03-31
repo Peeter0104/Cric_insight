@@ -17,7 +17,7 @@ let nonStriker = null;
 let currentBowler = null;
 let batsmenStats = {}; // { playerName: { runs, balls, fours, sixes, status, bowler } }
 let fallOfWickets = [];
-let bowlersStats = {}; // { playerName: { overs, maidens, runsConceded, wicketsTaken } }
+let bowlersStats = {}; // { playerName: { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0 } }
 let battingOrder = [];
 let nextBatsmanIndex = 0;
 
@@ -166,10 +166,6 @@ function playBall(outcome) {
     if (outcome !== "Wd" && !isNoBall && outcome !== "Out") {
         batsmenStats[striker].balls++;
         bowlersStats[currentBowler].runsConceded += (typeof outcome === 'number' ? outcome : 0);
-        // Increment partial overs after each valid ball
-        if (currentBowler) {
-            bowlersStats[currentBowler].overs += (1 / 6);
-        }
         ball_no++;
         if (ball_no > 6) {
             endOfOver();
@@ -221,9 +217,8 @@ function endOfOver() {
     scoreboard[over_no] = scoreboard[over_no] || [0];
     swapStrike();
     updateRunboardDisplay();
-    // At the end of the over, ensure the over count is a whole number
     if (currentBowler) {
-        bowlersStats[currentBowler].overs = Math.floor(bowlersStats[currentBowler].overs);
+        bowlersStats[currentBowler].overs++;
     }
     // Alert to change bowler (you might want a more UI-friendly way)
     alert("Over ended. Please select the bowler for the next over.");
@@ -274,18 +269,58 @@ function updateScoreboardModal() {
 
     const bowlerStatsBody = $("#bowler-stats-body");
     bowlerStatsBody.empty();
+    const bowlerOvers = {};
+    const bowlerRunsConceded = {};
+
+    // Initialize over and run counts for each bowler
+    bowlingTeamPlayers.forEach(bowler => {
+        bowlerOvers[bowler] = 0;
+        bowlerRunsConceded[bowler] = 0;
+    });
+
+    // Iterate through the scoreboard to count overs and runs
+    for (let i = 1; i < over_no; i++) {
+        const overData = scoreboard[i];
+        const bowler = scoreboardInfo[i - 1]?.bowler; // Get the bowler for the over
+
+        if (bowler && overData) {
+            let validBalls = 0;
+            let runsInOver = 0;
+            for (const ball of overData) {
+                if (typeof ball === 'number') {
+                    runsInOver += ball;
+                    validBalls++;
+                } else if (ball === 'Wd' || ball === 'Nb') {
+                    runsInOver += 1;
+                }
+            }
+            bowlerOvers[bowler] += (validBalls / 6);
+            bowlerRunsConceded[bowler] += runsInOver;
+        }
+    }
+
+    // Add the current over's balls and runs if the over is in progress
+    if (currentBowler && scoreboard[over_no]) {
+        let validBallsCurrentOver = ball_no - 1;
+        let runsCurrentOver = scoreboard[over_no].reduce((sum, ball) => (typeof ball === 'number' ? sum + ball : (ball === 'Wd' || ball === 'Nb' ? sum + 1 : sum)), 0);
+        bowlerOvers[currentBowler] += (validBallsCurrentOver / 6);
+        bowlerRunsConceded[currentBowler] += runsCurrentOver;
+    }
+
     for (const bowler in bowlersStats) {
         if (bowlingTeamPlayers.includes(bowler)) {
             const stats = bowlersStats[bowler];
-            // Calculate overs bowled, including the current partial over
-            const oversBowled = stats.overs;
+            const oversBowled = bowlerOvers[bowler] || 0;
+            const runsConcededByBowler = bowlerRunsConceded[bowler] || 0;
+            const economy = oversBowled > 0 ? (runsConcededByBowler / oversBowled).toFixed(2) : '0.00';
+
             const row = $("<tr></tr>");
             row.append(`<td>${bowler}</td>`);
             row.append(`<td>${oversBowled.toFixed(1)}</td>`);
             row.append(`<td>${stats.maidens}</td>`);
-            row.append(`<td>${stats.runsConceded}</td>`);
+            row.append(`<td>${runsConcededByBowler}</td>`);
             row.append(`<td>${stats.wicketsTaken}</td>`);
-            row.append(`<td>${stats.overs > 0 ? (stats.runsConceded / stats.overs).toFixed(2) : '0.00'}</td>`);
+            row.append(`<td>${economy}</td>`);
             bowlerStatsBody.append(row);
         }
     }
