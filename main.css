@@ -1,299 +1,95 @@
-/* main.css */
+html,
+body,
+.container {
+	margin: 0px;
+	max-width: 100%;
+}
 
 body {
-  font-family: sans-serif;
-  background: linear-gradient(to bottom, #33ccff 9%, #ff99cc 96%);
-  margin: 0; /* Reset default body margin */
-  padding: 20px; /* Add some padding around the content */
-  min-height: 100vh; /* Ensure the gradient covers the entire viewport */
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Align container to the top with padding */
+    background: linear-gradient(to bottom, #33ccff 9%, #ff99cc 96%);
+    margin: 0px;
+    max-width: 100%;
 }
 
-.container {
-  max-width: 600px;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Slightly darker shadow */
-  margin-top: 20px; /* Add some top margin to the container */
-}
-
+.col-left-custom,
 .col-left-custom {
-  text-align: center;
-  margin-bottom: 20px;
+	width: 100%;
 }
-
-.col-left-custom h6 {
-  margin-top: 10px;
-}
-
-.col-right-custom {
-  padding: 15px;
-}
-
 .over-ball-style {
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
-  text-align: center;
-  padding: 0;
-  font-size: 0.8em;
-  border-radius: 50%; /* Make them circular */
-  border: 1px solid #ccc;
-  background-color: #f8f9fa;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+    margin: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
 }
 
-.run-btn {
-  margin-bottom: 10px;
+@media only screen and (orientation: landscape) {
+	/* For desktops: */
+	.col-left-custom {
+		width: 70%;
+		float: left;
+		padding: 15px;
+	}
+	.col-right-custom {
+		width: 30%;
+		height: 100vh;
+		float: left;
+		padding: 15px;
+	}
+}
+
+.center {
+	margin: auto;
+	width: 100%;
+	border: 3px solid green;
+	padding: 10px;
 }
 
 .btn-custom {
-  padding: 0.75rem 1.25rem; /* Slightly larger buttons */
-  font-size: 1rem;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-}
-
-.btn-custom:hover {
-  opacity: 0.9;
-}
-
-.btn-custom-sm {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+	display: inline-block;
+	width: 100%;
 }
 
 .btn-custom-lg {
-  padding: 1rem 2rem;
-  font-size: 1.25rem;
+	height: 4.5em;
+}
+.btn-custom-sm {
+	height: 3em;
+}
+table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
 }
 
-.btn-outline-primary {
-  color: #007bff;
-  border-color: #007bff;
+td,
+th {
+	border: 1px solid #dddddd;
+	text-align: left;
+	padding: 8px;
 }
 
-.btn-outline-primary:hover {
-  background-color: #007bff;
-  color: #fff;
+tr:nth-child(even) {
+	background-color: #dddddd;
 }
 
-.btn-info {
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-  color: #fff;
-}
-
-.btn-info:hover {
-  background-color: #138496;
-  border-color: #117a8b;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-  color: #fff;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-  border-color: #bd2130;
+.material-symbols-outlined {
+	font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 200, "opsz" 24;
 }
 
 .transparent-input {
-  background-color: transparent !important;
-  border: none;
-  border-bottom: 1px solid #ccc;
-  border-radius: 0;
-  padding: 0.375rem 0;
+    background-color: transparent !important;
+    border: none; /* Remove the border for a cleaner look */
+    color: #000; /* Set a default text color for visibility */
+    padding: 0.5rem; /* Add some padding inside the text field */
+    text-align: center; /* Center the text within the field */
 }
 
-.transparent-input:focus {
-  outline: none;
-  border-bottom-color: #007bff;
-  box-shadow: none;
-}
-
-/* Scoreboard Styling */
-#scoreboard {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 15px;
-  border: 1px solid #ddd; /* Add border to the table */
-}
-
-#scoreboard th,
-#scoreboard td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-#scoreboard th {
-  background-color: #f8f9fa;
-  font-weight: bold;
-}
-
-#scoreboard tbody tr:last-child td {
-  border-bottom: none;
-}
-
-/* Style for Batsman column */
-#scoreboard tbody td:nth-child(1) {
-  text-align: left;
-}
-
-/* Style for Run, Ball, 4s, 6s, SR columns */
-#scoreboard thead th:nth-child(n+2),
-#scoreboard tbody td:nth-child(n+2) {
-  text-align: right;
-}
-
-/* Style for the "b Bowler" text */
-#scoreboard tbody tr td:nth-child(1) small {
-  display: block;
-  color: #777;
-  font-size: 0.8em;
-}
-
-/* Initial Setup Modal Styling */
-#initialSetupModal .modal-dialog {
-  max-width: 500px; /* Adjust modal width if needed */
-}
-
-#initialSetupModal .modal-body {
-  padding: 20px;
-}
-
-#initialSetupModal .modal-footer {
-  padding: 15px;
-}
-
-#initialSetupModal h6 {
-  margin-top: 15px;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-#initialSetupModal .form-group label {
-  font-weight: normal;
-}
-
-/* Dropdown Styling */
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.form-group select.form-control {
-  width: 100%;
-  padding: 0.5rem 0.75rem; /* Adjust padding */
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  appearance: none; /* Remove default arrow */
-  background-image: url('data:image/svg+xml;charset=utf8,%3Csvg fill%3D%22%23343a40%22 viewBox%3D%220 0 4 5%22%3E%3Cpath fill-rule%3D%22evenodd%22 d%3D%22M2 0L0 2h4L2 0z%22/%3E%3C/svg%3E');
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 8px 10px;
-}
-
-.form-group select.form-control:focus {
-  outline: 0;
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-/* Fall of Wickets and Bowlers Table */
-#fall-of-wickets {
-  margin-bottom: 15px;
-  font-size: 0.9em;
-  color: #555;
-}
-
-#bowler-stats {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #ddd; /* Add border to the table */
-}
-
-#bowler-stats th,
-#bowler-stats td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-#bowler-stats th {
-  background-color: #e9ecef; /* Light gray background for bowler stats header */
-  font-weight: bold;
-}
-
-#bowler-stats tbody tr:last-child td {
-  border-bottom: none;
-}
-
-#bowler-stats tbody td:nth-child(n+2) {
-  text-align: right;
-}
-
-/* Button Grid Styling */
-.button-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding: 10px;
-}
-
-.button-grid .run-btn button {
-  width: 100%;
-  height: 60px; /* Adjust button height */
-  font-size: 1.2em; /* Adjust button font size */
-  border-radius: 5px;
-}
-
-/* Footer Links Styling */
-.container > div:last-child { /* Select the last div in the container (where links are) */
-  margin-top: 20px;
-  text-align: center;
-}
-
-.container > div:last-child button {
-  border: none;
-  background: none;
-  color: #007bff;
-  padding: 5px 10px;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 0.9em;
-}
-
-.container > div:last-child button:hover {
-  text-decoration: underline;
-}
-
-/* Alert Styling */
-.alert-primary {
-  color: #004085;
-  background-color: #cce5ff;
-  border-color: #b8daff;
-  padding: 10px;
-  margin-top: 15px;
-  border-radius: 5px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.alert-primary .btn-close {
-  padding: 0.25rem 0.5rem;
-  margin-left: 10px;
-  opacity: 0.5;
-  cursor: pointer;
-}
-
-.alert-primary .btn-close:hover {
-  opacity: 0.75;
+.transparent-input::placeholder {
+    color: #777; /* Style the placeholder text */
+    opacity: 1; /* Ensure placeholder is visible */
+    text-align: center; /* Center the placeholder text */
 }
