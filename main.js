@@ -25,6 +25,7 @@ let targetRuns = 0;
 let targetOvers = 0;
 let totalTargetBalls = 0;
 let isTargetSet = false;
+let gameStarted = false; // Flag to check if the game has started
 
 $(document).ready(function () {
     console.log("Document ready in main.js");
@@ -55,6 +56,17 @@ $(document).ready(function () {
         currentBowler = $(this).val();
         console.log("Bowler selected:", currentBowler);
     });
+
+    // Event listener for beforeunload
+    window.addEventListener('beforeunload', function (e) {
+        if (gameStarted && (runs > 0 || wickets > 0 || over_no > 1 || ball_no > 1)) {
+            // Cancel the event
+            e.preventDefault();
+            // Chrome requires returnValue to be set
+            e.returnValue = '';
+            return 'Are you sure you want to leave? Your game progress will be lost.';
+        }
+    });
 });
 
 function saveTeamData() {
@@ -83,6 +95,7 @@ function saveTeamData() {
         ballsBowledThisOver = 0; // Initialize for the first over
         isTargetSet = false;
         $("#targetBoard").hide();
+        gameStarted = true; // Set the flag when the game starts
 
         $('#initialSetupModal').modal('hide');
     } else {
