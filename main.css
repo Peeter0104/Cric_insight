@@ -2,21 +2,31 @@
 
 body {
   font-family: sans-serif;
-  background-color: #e5f3ff;
+  background: linear-gradient(to bottom, #33ccff 9%, #ff99cc 96%);
+  margin: 0; /* Reset default body margin */
+  padding: 20px; /* Add some padding around the content */
+  min-height: 100vh; /* Ensure the gradient covers the entire viewport */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align container to the top with padding */
 }
 
 .container {
   max-width: 600px;
-  margin: 20px auto;
   padding: 20px;
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Slightly darker shadow */
+  margin-top: 20px; /* Add some top margin to the container */
 }
 
 .col-left-custom {
   text-align: center;
   margin-bottom: 20px;
+}
+
+.col-left-custom h6 {
+  margin-top: 10px;
 }
 
 .col-right-custom {
@@ -30,6 +40,9 @@ body {
   text-align: center;
   padding: 0;
   font-size: 0.8em;
+  border-radius: 50%; /* Make them circular */
+  border: 1px solid #ccc;
+  background-color: #f8f9fa;
 }
 
 .run-btn {
@@ -37,19 +50,56 @@ body {
 }
 
 .btn-custom {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.25rem; /* Slightly larger buttons */
   font-size: 1rem;
   border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-custom:hover {
+  opacity: 0.9;
 }
 
 .btn-custom-sm {
-  padding: 0.25rem 0.5rem;
+  padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
 }
 
 .btn-custom-lg {
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 2rem;
   font-size: 1.25rem;
+}
+
+.btn-outline-primary {
+  color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-outline-primary:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: #fff;
+}
+
+.btn-info:hover {
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
 }
 
 .transparent-input {
@@ -71,6 +121,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 15px;
+  border: 1px solid #ddd; /* Add border to the table */
 }
 
 #scoreboard th,
@@ -100,14 +151,18 @@ body {
   text-align: right;
 }
 
-/* Style for the "b Bowler" text (you might need to adjust the selector) */
+/* Style for the "b Bowler" text */
 #scoreboard tbody tr td:nth-child(1) small {
   display: block;
   color: #777;
   font-size: 0.8em;
 }
 
-/* Initial Setup Modal Styling (basic) */
+/* Initial Setup Modal Styling */
+#initialSetupModal .modal-dialog {
+  max-width: 500px; /* Adjust modal width if needed */
+}
+
 #initialSetupModal .modal-body {
   padding: 20px;
 }
@@ -119,9 +174,14 @@ body {
 #initialSetupModal h6 {
   margin-top: 15px;
   margin-bottom: 5px;
+  font-weight: bold;
 }
 
-/* Dropdown Styling (basic) */
+#initialSetupModal .form-group label {
+  font-weight: normal;
+}
+
+/* Dropdown Styling */
 .form-group label {
   display: block;
   margin-bottom: 5px;
@@ -130,7 +190,7 @@ body {
 
 .form-group select.form-control {
   width: 100%;
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 0.75rem; /* Adjust padding */
   border: 1px solid #ced4da;
   border-radius: 0.25rem;
   appearance: none; /* Remove default arrow */
@@ -146,7 +206,7 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-/* Fall of Wickets and Bowlers Table (basic) */
+/* Fall of Wickets and Bowlers Table */
 #fall-of-wickets {
   margin-bottom: 15px;
   font-size: 0.9em;
@@ -156,6 +216,7 @@ body {
 #bowler-stats {
   width: 100%;
   border-collapse: collapse;
+  border: 1px solid #ddd; /* Add border to the table */
 }
 
 #bowler-stats th,
@@ -166,7 +227,7 @@ body {
 }
 
 #bowler-stats th {
-  background-color: #cce5ff;
+  background-color: #e9ecef; /* Light gray background for bowler stats header */
   font-weight: bold;
 }
 
@@ -176,4 +237,63 @@ body {
 
 #bowler-stats tbody td:nth-child(n+2) {
   text-align: right;
+}
+
+/* Button Grid Styling */
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+
+.button-grid .run-btn button {
+  width: 100%;
+  height: 60px; /* Adjust button height */
+  font-size: 1.2em; /* Adjust button font size */
+  border-radius: 5px;
+}
+
+/* Footer Links Styling */
+.container > div:last-child { /* Select the last div in the container (where links are) */
+  margin-top: 20px;
+  text-align: center;
+}
+
+.container > div:last-child button {
+  border: none;
+  background: none;
+  color: #007bff;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.container > div:last-child button:hover {
+  text-decoration: underline;
+}
+
+/* Alert Styling */
+.alert-primary {
+  color: #004085;
+  background-color: #cce5ff;
+  border-color: #b8daff;
+  padding: 10px;
+  margin-top: 15px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-primary .btn-close {
+  padding: 0.25rem 0.5rem;
+  margin-left: 10px;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.alert-primary .btn-close:hover {
+  opacity: 0.75;
 }
