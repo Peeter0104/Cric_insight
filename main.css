@@ -1,95 +1,179 @@
-html,
-body,
-.container {
-	margin: 0px;
-	max-width: 100%;
-}
+/* main.css */
 
 body {
-    background: linear-gradient(to bottom, #33ccff 9%, #ff99cc 96%);
-    margin: 0px;
-    max-width: 100%;
+  font-family: sans-serif;
+  background-color: #e5f3ff;
 }
 
-.col-left-custom,
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 .col-left-custom {
-	width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
 }
+
+.col-right-custom {
+  padding: 15px;
+}
+
 .over-ball-style {
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-    margin: 0.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.2rem;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  padding: 0;
+  font-size: 0.8em;
 }
 
-@media only screen and (orientation: landscape) {
-	/* For desktops: */
-	.col-left-custom {
-		width: 70%;
-		float: left;
-		padding: 15px;
-	}
-	.col-right-custom {
-		width: 30%;
-		height: 100vh;
-		float: left;
-		padding: 15px;
-	}
-}
-
-.center {
-	margin: auto;
-	width: 100%;
-	border: 3px solid green;
-	padding: 10px;
+.run-btn {
+  margin-bottom: 10px;
 }
 
 .btn-custom {
-	display: inline-block;
-	width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 5px;
+}
+
+.btn-custom-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
 }
 
 .btn-custom-lg {
-	height: 4.5em;
-}
-.btn-custom-sm {
-	height: 3em;
-}
-table {
-	font-family: arial, sans-serif;
-	border-collapse: collapse;
-	width: 100%;
-}
-
-td,
-th {
-	border: 1px solid #dddddd;
-	text-align: left;
-	padding: 8px;
-}
-
-tr:nth-child(even) {
-	background-color: #dddddd;
-}
-
-.material-symbols-outlined {
-	font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 200, "opsz" 24;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.25rem;
 }
 
 .transparent-input {
-    background-color: transparent !important;
-    border: none; /* Remove the border for a cleaner look */
-    color: #000; /* Set a default text color for visibility */
-    padding: 0.5rem; /* Add some padding inside the text field */
-    text-align: center; /* Center the text within the field */
+  background-color: transparent !important;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  border-radius: 0;
+  padding: 0.375rem 0;
 }
 
-.transparent-input::placeholder {
-    color: #777; /* Style the placeholder text */
-    opacity: 1; /* Ensure placeholder is visible */
-    text-align: center; /* Center the placeholder text */
+.transparent-input:focus {
+  outline: none;
+  border-bottom-color: #007bff;
+  box-shadow: none;
+}
+
+/* Scoreboard Styling */
+#scoreboard {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+#scoreboard th,
+#scoreboard td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+#scoreboard th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+#scoreboard tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Style for Batsman column */
+#scoreboard tbody td:nth-child(1) {
+  text-align: left;
+}
+
+/* Style for Run, Ball, 4s, 6s, SR columns */
+#scoreboard thead th:nth-child(n+2),
+#scoreboard tbody td:nth-child(n+2) {
+  text-align: right;
+}
+
+/* Style for the "b Bowler" text (you might need to adjust the selector) */
+#scoreboard tbody tr td:nth-child(1) small {
+  display: block;
+  color: #777;
+  font-size: 0.8em;
+}
+
+/* Initial Setup Modal Styling (basic) */
+#initialSetupModal .modal-body {
+  padding: 20px;
+}
+
+#initialSetupModal .modal-footer {
+  padding: 15px;
+}
+
+#initialSetupModal h6 {
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+/* Dropdown Styling (basic) */
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group select.form-control {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  appearance: none; /* Remove default arrow */
+  background-image: url('data:image/svg+xml;charset=utf8,%3Csvg fill%3D%22%23343a40%22 viewBox%3D%220 0 4 5%22%3E%3Cpath fill-rule%3D%22evenodd%22 d%3D%22M2 0L0 2h4L2 0z%22/%3E%3C/svg%3E');
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 8px 10px;
+}
+
+.form-group select.form-control:focus {
+  outline: 0;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Fall of Wickets and Bowlers Table (basic) */
+#fall-of-wickets {
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+#bowler-stats {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#bowler-stats th,
+#bowler-stats td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+#bowler-stats th {
+  background-color: #cce5ff;
+  font-weight: bold;
+}
+
+#bowler-stats tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#bowler-stats tbody td:nth-child(n+2) {
+  text-align: right;
 }
