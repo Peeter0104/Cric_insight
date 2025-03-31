@@ -58,21 +58,19 @@ $(document).ready(function () {
 });
 
 function saveTeamData() {
-    console.log("saveTeamData called");
     team1Name = $("#team1Name").val().trim();
     team2Name = $("#team2Name").val().trim();
     team1Players = $("#team1Players").val().split('\n').map(p => p.trim()).filter(p => p !== "");
     team2Players = $("#team2Players").val().split('\n').map(p => p.trim()).filter(p => p !== "");
 
-    console.log("team1Players:", team1Players);
-    console.log("team2Players:", team2Players);
-
     if (team1Players.length > 0 && team2Players.length > 0) {
+        // Basic logic: Team 1 bats first
         battingTeamPlayers = [...team1Players];
         bowlingTeamPlayers = [...team2Players];
         battingOrder = [...battingTeamPlayers];
         nextBatsmanIndex = 0;
 
+        // Initialize stats
         battingTeamPlayers.forEach(player => batsmenStats[player] = { runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out", bowler: null });
         bowlingTeamPlayers.forEach(player => bowlersStats[player] = { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0, ballsBowled: 0 });
 
@@ -82,7 +80,7 @@ function saveTeamData() {
         setInitialBatsmen();
         updateScoreDisplay();
         updateRunboardDisplay();
-        ballsBowledThisOver = 0;
+        ballsBowledThisOver = 0; // Initialize for the first over
         isTargetSet = false;
         $("#targetBoard").hide();
 
@@ -105,8 +103,6 @@ function setInitialBatsmen() {
 }
 
 function populateBatsmanDropdowns() {
-    console.log("populateBatsmanDropdowns called");
-    console.log("battingTeamPlayers:", battingTeamPlayers);
     const strikerDropdown = $("#strikerBatsman");
     const nonStrikerDropdown = $("#nonStrikerBatsman");
 
@@ -115,10 +111,11 @@ function populateBatsmanDropdowns() {
 
     const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out");
     availableBatsmen.forEach(player => {
-        strikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
-        nonStrikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        strikerDropdown.append(`<option value="${player}">${player}</option>`);
+        nonStrikerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 
+    // Select current batsmen if they are still available
     if (striker && availableBatsmen.includes(striker)) {
         $("#strikerBatsman").val(striker).prop('selected', true);
     }
@@ -128,12 +125,10 @@ function populateBatsmanDropdowns() {
 }
 
 function populateBowlerDropdown() {
-    console.log("populateBowlerDropdown called");
-    console.log("bowlingTeamPlayers:", bowlingTeamPlayers);
     const bowlerDropdown = $("#currentBowler");
     bowlerDropdown.empty().append('<option value="">Select Bowler</option>');
     bowlingTeamPlayers.forEach(player => {
-        bowlerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        bowlerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 }
 
@@ -161,7 +156,7 @@ function playBall(outcome) {
         batsmenStats[striker].status = "out";
         batsmenStats[striker].bowler = currentBowler;
         bowlersStats[currentBowler].wicketsTaken++;
-        fallOfWickets.push(`${striker} - <span class="math-inline">\{runs\}\-</span>{wickets + 1} (<span class="math-inline">\{over\_no\}\.</span>{ball_no})`);
+        fallOfWickets.push(`${striker} - ${runs}-${wickets + 1} (${over_no}.${ball_no})`);
         wickets++;
         updateScoreDisplay();
         handleWicket();
@@ -252,7 +247,6 @@ function swapStrike() {
 function updateScoreDisplay() {
     $("#run").text(runs);
     $("#wickets").text(wickets);
-    $("#over-ball").text(`<span class="math-inline">\{over\_no \- 1\}\.</span>{ball_no - 1}`);
 
     if (isTargetSet) {
         const targetRunsRequired = targetRuns - runs;
@@ -262,7 +256,7 @@ function updateScoreDisplay() {
         const remainingBallsInOver = targetBallsLeft % 6;
 
         $("#targetRunsRequired").text(targetRunsRequired >= 0 ? targetRunsRequired : 0);
-        $("#targetOversLeft").text(`<span class="math-inline">\{oversLeft\}\.</span>{remainingBallsInOver >= 0 ? remainingBallsInOver : 0}`);
+        $("#targetOversLeft").text(`${oversLeft}.${remainingBallsInOver >= 0 ? remainingBallsInOver : 0}`);
 
         if (targetRuns <= runs) {
             $("#targetBody").html('Target Reached!');
@@ -277,7 +271,7 @@ function updateScoreDisplay() {
 }
 
 function updateRunboardDisplay() {
-    $("#over-ball").text(`<span class="math-inline">\{over\_no \- 1\}\.</span>{ball_no - 1}`);
+    $("#over-ball").text(`${over_no - 1}.${ball_no - 1}`);
 }
 
 function updateScoreboardModal() {
@@ -327,18 +321,33 @@ function updateScoreboardModal() {
         }
     }
 
-    // Add Download Button to the modal footer
-    const modalFooter = $('#myModal .modal-footer');
-    modalFooter.empty(); // Clear existing buttons
-    modalFooter.append('<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>');
-    modalFooter.append('<button type="button" class="btn btn-primary" id="downloadScoreboard">Download PDF</button>');
-
     $('#myModal').modal('show');
-
-    // Attach event listener for the download button after the modal is shown
-    $("#downloadScoreboard").off('click').on("click", downloadScoreboardPDF);
 }
 
+function setTarget(shouldSet = true) {
+    if (shouldSet) {
+        const targetRunsInput = $("#targetRuns").val();
+        const targetOversInput = $("#targetOvers").val();
+
+        if (targetRunsInput && targetOversInput && !isNaN(targetRunsInput) && !isNaN(targetOversInput) && parseInt(targetOversInput) > 0) {
+            targetRuns = parseInt(targetRunsInput);
+            targetOvers = parseInt(targetOversInput);
+            totalTargetBalls = targetOvers * 6;
+            isTargetSet = true;
+            updateScoreDisplay();
+        } else if (shouldSet) {
+            alert("Please enter valid target runs and overs.");
+        } else {
+            // Called when the close button on the target board is clicked
+            isTargetSet = false;
+            $("#targetBoard").hide();
+        }
+    } else {
+        // Called when the close button on the target board is clicked
+        isTargetSet = false;
+        $("#targetBoard").hide();
+    }
+}
 function downloadScoreboardPDF() {
     const { jsPDF } = jspdf;
     const pdf = new jsPDF('p', 'pt', 'a4');
@@ -387,3 +396,48 @@ function downloadScoreboardPDF() {
     const fowDiv = document.getElementById('fall-of-wickets');
     if (fowDiv && fowDiv.querySelector('p')) {
         pdf.setFontSize(12);
+        pdf.text('Fall of Wickets', margin, y);
+        y += 15;
+        pdf.setFontSize(10);
+        const fowText = fowDiv.querySelector('p').innerText;
+        const splitText = pdf.splitTextToSize(fowText, pdf.internal.pageSize.width - 2 * margin);
+        pdf.text(splitText, margin, y);
+        y = pdf.getTextDimensions(splitText, { fontSize: 10 }).h + y + 15;
+    }
+
+    // Bowler Stats Table
+    const bowlersTable = document.getElementById('bowler-stats');
+    if (bowlersTable) {
+        pdf.setFontSize(12);
+        pdf.text('Bowler Statistics', margin, y);
+        y += 15;
+
+        const headers = [];
+        const data = [];
+
+        // Get headers
+        const ths = bowlersTable.querySelectorAll('thead th');
+        ths.forEach(th => headers.push(th.innerText));
+
+        // Get data rows
+        const trs = bowlersTable.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            const rowData = [];
+            const tds = tr.querySelectorAll('td');
+            tds.forEach(td => rowData.push(td.innerText));
+            data.push(rowData);
+        });
+
+        pdf.autoTable({
+            head: [headers],
+            body: data,
+            startX: margin,
+            startY: y,
+            margin: { horizontal: margin },
+            fontSize: 10
+        });
+        y = pdf.autoTable.previous.finalY + 15;
+    }
+
+    pdf.save('scoreboard.pdf');
+}
