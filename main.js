@@ -217,6 +217,9 @@ function endOfOver() {
   scoreboard[over_no] = scoreboard[over_no] || [0];
   swapStrike();
   updateRunboardDisplay();
+  if (currentBowler) {
+    bowlersStats[currentBowler].overs++;
+  }
   // Alert to change bowler (you might want a more UI-friendly way)
   alert("Over ended. Please select the bowler for the next over.");
 }
@@ -269,14 +272,10 @@ function updateScoreboardModal() {
   for (const bowler in bowlersStats) {
     if (bowlingTeamPlayers.includes(bowler)) {
       const stats = bowlersStats[bowler];
-      const oversBowled = Math.floor(stats.overs) + (scoreboardInfo[over_no - 1]?.bowler === bowler && ball_no > 1 ? (ball_no - 1) / 6 : 0);
-      const runsInOver = scoreboard[over_no]?.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0) || 0;
-      stats.runsConceded += (scoreboardInfo[over_no - 1]?.bowler === bowler ? runsInOver : 0);
-      stats.overs = over_no - 1 + (ball_no > 1 && scoreboardInfo[over_no - 1]?.bowler === bowler ? (ball_no - 1) / 6 : 0);
-
+      const oversBowled = stats.overs; // Get overs directly from stats
       const row = $("<tr></tr>");
       row.append(`<td>${bowler}</td>`);
-      row.append(`<td>${stats.overs.toFixed(1)}</td>`);
+      row.append(`<td>${oversBowled.toFixed(1)}</td>`);
       row.append(`<td>${stats.maidens}</td>`);
       row.append(`<td>${stats.runsConceded}</td>`);
       row.append(`<td>${stats.wicketsTaken}</td>`);
