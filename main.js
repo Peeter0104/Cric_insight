@@ -60,10 +60,7 @@ $(document).ready(function () {
     // Event listener for beforeunload
     window.addEventListener('beforeunload', function (e) {
         if (gameStarted && (runs > 0 || wickets > 0 || over_no > 1 || ball_no > 1)) {
-            // Cancel the event
-            e.preventDefault();
-            // Chrome requires returnValue to be set
-            e.returnValue = '';
+            // Standard alert (browser might customize the message)
             return 'Are you sure you want to leave? Your game progress will be lost.';
         }
     });
