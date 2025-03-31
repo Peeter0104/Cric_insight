@@ -21,6 +21,10 @@ let bowlersStats = {}; // { playerName: { overs: 0, maidens: 0, runsConceded: 0,
 let battingOrder = [];
 let nextBatsmanIndex = 0;
 let ballsBowledThisOver = 0;
+let targetRuns = 0;
+let targetOvers = 0;
+let totalTargetBalls = 0;
+let isTargetSet = false;
 
 $(document).ready(function () {
     console.log("Document ready in main.js");
@@ -77,6 +81,8 @@ function saveTeamData() {
         updateScoreDisplay();
         updateRunboardDisplay();
         ballsBowledThisOver = 0; // Initialize for the first over
+        isTargetSet = false;
+        $("#targetBoard").hide();
 
         $('#initialSetupModal').modal('hide');
     } else {
@@ -225,6 +231,7 @@ function endOfOver() {
         bowlersStats[currentBowler].overs++;
     }
     ballsBowledThisOver = 0; // Reset for the new over
+    updateScoreDisplay(); // Update target information after each over
     // Alert to change bowler (you might want a more UI-friendly way)
     alert("Over ended. Please select the bowler for the next over.");
 }
@@ -240,6 +247,27 @@ function swapStrike() {
 function updateScoreDisplay() {
     $("#run").text(runs);
     $("#wickets").text(wickets);
+
+    if (isTargetSet) {
+        const targetRunsRequired = targetRuns - runs;
+        const ballsBowled = (over_no - 1) * 6 + (ball_no - 1);
+        const targetBallsLeft = totalTargetBalls - ballsBowled;
+        const oversLeft = Math.floor(targetBallsLeft / 6);
+        const remainingBallsInOver = targetBallsLeft % 6;
+
+        $("#targetRunsRequired").text(targetRunsRequired >= 0 ? targetRunsRequired : 0);
+        $("#targetOversLeft").text(`${oversLeft}.${remainingBallsInOver >= 0 ? remainingBallsInOver : 0}`);
+
+        if (targetRuns <= runs) {
+            $("#targetBody").html('Target Reached!');
+        } else if (targetBallsLeft <= 0 && targetRuns > runs) {
+            $("#targetBody").html('Innings Over - Target Not Reached!');
+        }
+
+        $("#targetBoard").show();
+    } else {
+        $("#targetBoard").hide();
+    }
 }
 
 function updateRunboardDisplay() {
@@ -293,4 +321,29 @@ function updateScoreboardModal() {
     }
 
     $('#myModal').modal('show');
+}
+
+function setTarget(shouldSet = true) {
+    if (shouldSet) {
+        const targetRunsInput = $("#targetRuns").val();
+        const targetOversInput = $("#targetOvers").val();
+
+        if (targetRunsInput && targetOversInput && !isNaN(targetRunsInput) && !isNaN(targetOversInput) && parseInt(targetOversInput) > 0) {
+            targetRuns = parseInt(targetRunsInput);
+            targetOvers = parseInt(targetOversInput);
+            totalTargetBalls = targetOvers * 6;
+            isTargetSet = true;
+            updateScoreDisplay();
+        } else if (shouldSet) {
+            alert("Please enter valid target runs and overs.");
+        } else {
+            // Called when the close button on the target board is clicked
+            isTargetSet = false;
+            $("#targetBoard").hide();
+        }
+    } else {
+        // Called when the close button on the target board is clicked
+        isTargetSet = false;
+        $("#targetBoard").hide();
+    }
 }
