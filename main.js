@@ -55,10 +55,16 @@ $(document).ready(function () {
 });
 
 function saveTeamData() {
+    console.log("saveTeamData() called"); // ADD THIS
     team1Name = $("#team1Name").val().trim();
     team2Name = $("#team2Name").val().trim();
     team1Players = $("#team1Players").val().split('\n').map(p => p.trim()).filter(p => p !== "");
     team2Players = $("#team2Players").val().split('\n').map(p => p.trim()).filter(p => p !== "");
+
+    console.log("Team 1 Name:", team1Name); // ADD THIS
+    console.log("Team 1 Players:", team1Players); // ADD THIS
+    console.log("Team 2 Name:", team2Name); // ADD THIS
+    console.log("Team 2 Players:", team2Players); // ADD THIS
 
     if (team1Players.length > 0 && team2Players.length > 0) {
         // Basic logic: Team 1 bats first
@@ -81,9 +87,11 @@ function saveTeamData() {
         updateRunboardDisplay();
         updateBallIndicators();
 
+        console.log("Team data valid, proceeding to setup"); // ADD THIS
         $('#initialSetupModal').modal('hide');
     } else {
         alert("Please enter players for both teams.");
+        console.log("Team data invalid"); // ADD THIS
     }
 }
 
@@ -108,8 +116,8 @@ function populateBatsmanDropdowns() {
 
     const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out");
     availableBatsmen.forEach(player => {
-        strikerDropdown.append(`<option value="${player}">${player}</option>`);
-        nonStrikerDropdown.append(`<option value="${player}">${player}</option>`);
+        strikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        nonStrikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
     });
 
     // Select current batsmen if they are still available
@@ -125,7 +133,7 @@ function populateBowlerDropdown() {
     const bowlerDropdown = $("#currentBowler");
     bowlerDropdown.empty().append('<option value="">Select Bowler</option>');
     bowlingTeamPlayers.forEach(player => {
-        bowlerDropdown.append(`<option value="${player}">${player}</option>`);
+        bowlerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
     });
 }
 
@@ -172,7 +180,7 @@ function playBall(outcome) {
         bowlersStats[currentBowler].totalWicketsTaken = (bowlersStats[currentBowler].totalWicketsTaken || 0) + 1;
         bowlersStats[currentBowler].overs[over_no] = bowlersStats[currentBowler].overs[over_no] || { ballsBowled: 0, runsConceded: 0, wicketsTaken: 0 };
         bowlersStats[currentBowler].overs[over_no].wicketsTaken++;
-        fallOfWickets.push(`${striker} - ${runs}-${wickets + 1} (${over_no}.${ball_no})`);
+        fallOfWickets.push(`${striker} - <span class="math-inline">\{runs\}\-</span>{wickets + 1} (<span class="math-inline">\{over\_no\}\.</span>{ball_no})`);
         wickets++;
         updateScoreDisplay();
         handleWicket();
@@ -266,7 +274,7 @@ function updateScoreDisplay() {
 }
 
 function updateRunboardDisplay() {
-    $("#over-ball").text(`${over_no - 1}.${ball_no - 1}`);
+    $("#over-ball").text(`<span class="math-inline">\{over\_no \- 1\}\.</span>{ball_no - 1}`);
 }
 
 function updateBallIndicators() {
@@ -362,5 +370,3 @@ function undoLastAction() {
     } else {
         alert("No previous valid action to undo.");
     }
-    $('#myModal2').modal('hide'); // Close the undo modal
-}
