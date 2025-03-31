@@ -111,8 +111,8 @@ function populateBatsmanDropdowns() {
 
     const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out");
     availableBatsmen.forEach(player => {
-        strikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
-        nonStrikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        strikerDropdown.append(`<option value="${player}">${player}</option>`);
+        nonStrikerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 
     // Select current batsmen if they are still available
@@ -128,7 +128,7 @@ function populateBowlerDropdown() {
     const bowlerDropdown = $("#currentBowler");
     bowlerDropdown.empty().append('<option value="">Select Bowler</option>');
     bowlingTeamPlayers.forEach(player => {
-        bowlerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        bowlerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 }
 
@@ -156,12 +156,11 @@ function playBall(outcome) {
         batsmenStats[striker].status = "out";
         batsmenStats[striker].bowler = currentBowler;
         bowlersStats[currentBowler].wicketsTaken++;
-        fallOfWickets.push(`${striker} - <span class="math-inline">\{runs\}\-</span>{wickets + 1} (<span class="math-inline">\{over\_no\}\.</span>{ball_no})`);
+        fallOfWickets.push(`${striker} - ${runs}-${wickets + 1} (${over_no}.${ball_no})`);
         wickets++;
         updateScoreDisplay();
         handleWicket();
-        endOfBall(true); // Indicate that a ball was bowled
-        return; // Exit the function after a wicket, as endOfBall handles ball/over increment
+        endOfBall();
     } else if (typeof outcome === 'number') {
         batsmenStats[striker].runs += outcome;
         runs += outcome;
@@ -170,9 +169,9 @@ function playBall(outcome) {
         if (outcome === 6) batsmenStats[striker].sixes++;
         updateScoreDisplay();
         handleRun(outcome);
-        endOfBall(true); // Indicate that a ball was bowled
+        endOfBall();
     } else if (outcome === 0) {
-        endOfBall(true); // Indicate that a ball was bowled
+        endOfBall();
     }
 
     if (outcome !== "Wd" && !isNoBall && outcome !== "Out") {
@@ -195,15 +194,8 @@ function playBall(outcome) {
     populateBatsmanDropdowns(); // Update dropdowns after each ball (for out players)
 }
 
-function endOfBall(isLegalDelivery = false) {
+function endOfBall() {
     updateRunboardDisplay();
-    if (isLegalDelivery) {
-        ballsBowledThisOver++;
-        ball_no++;
-        if (ball_no > 6) {
-            endOfOver();
-        }
-    }
 }
 
 function handleRun(run) {
@@ -264,7 +256,7 @@ function updateScoreDisplay() {
         const remainingBallsInOver = targetBallsLeft % 6;
 
         $("#targetRunsRequired").text(targetRunsRequired >= 0 ? targetRunsRequired : 0);
-        $("#targetOversLeft").text(`<span class="math-inline">\{oversLeft\}\.</span>{remainingBallsInOver >= 0 ? remainingBallsInOver : 0}`);
+        $("#targetOversLeft").text(`${oversLeft}.${remainingBallsInOver >= 0 ? remainingBallsInOver : 0}`);
 
         if (targetRuns <= runs) {
             $("#targetBody").html('Target Reached!');
@@ -279,7 +271,7 @@ function updateScoreDisplay() {
 }
 
 function updateRunboardDisplay() {
-    $("#over-ball").text(`<span class="math-inline">\{over\_no \- 1\}\.</span>{ball_no - 1}`);
+    $("#over-ball").text(`${over_no - 1}.${ball_no - 1}`);
 }
 
 function updateScoreboardModal() {
@@ -337,7 +329,7 @@ function setTarget(shouldSet = true) {
         const targetRunsInput = $("#targetRuns").val();
         const targetOversInput = $("#targetOvers").val();
 
-        if (targetRunsInput && targetOversInput && !isNaN(targetRunsInput) && !isNaN(targetOversInput)) {
+        if (targetRunsInput && targetOversInput && !isNaN(targetRunsInput) && !isNaN(targetOversInput) && parseInt(targetOversInput) > 0) {
             targetRuns = parseInt(targetRunsInput);
             targetOvers = parseInt(targetOversInput);
             totalTargetBalls = targetOvers * 6;
@@ -355,4 +347,97 @@ function setTarget(shouldSet = true) {
         isTargetSet = false;
         $("#targetBoard").hide();
     }
+}
+function downloadScoreboardPDF() {
+    const { jsPDF } = jspdf;
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const margin = 20;
+    let y = margin;
+
+    pdf.setFontSize(16);
+    pdf.text('Scoreboard', margin, y);
+    y += 20;
+
+    // Batsmen Stats Table
+    const batsmenTable = document.getElementById('batsman-stats');
+    if (batsmenTable) {
+        pdf.setFontSize(12);
+        pdf.text('Batsmen Statistics', margin, y);
+        y += 15;
+
+        const headers = [];
+        const data = [];
+
+        // Get headers
+        const ths = batsmenTable.querySelectorAll('thead th');
+        ths.forEach(th => headers.push(th.innerText));
+
+        // Get data rows
+        const trs = batsmenTable.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            const rowData = [];
+            const tds = tr.querySelectorAll('td');
+            tds.forEach(td => rowData.push(td.innerText));
+            data.push(rowData);
+        });
+
+        pdf.autoTable({
+            head: [headers],
+            body: data,
+            startX: margin,
+            startY: y,
+            margin: { horizontal: margin },
+            fontSize: 10
+        });
+        y = pdf.autoTable.previous.finalY + 15;
+    }
+
+    // Fall of Wickets
+    const fowDiv = document.getElementById('fall-of-wickets');
+    if (fowDiv && fowDiv.querySelector('p')) {
+        pdf.setFontSize(12);
+        pdf.text('Fall of Wickets', margin, y);
+        y += 15;
+        pdf.setFontSize(10);
+        const fowText = fowDiv.querySelector('p').innerText;
+        const splitText = pdf.splitTextToSize(fowText, pdf.internal.pageSize.width - 2 * margin);
+        pdf.text(splitText, margin, y);
+        y = pdf.getTextDimensions(splitText, { fontSize: 10 }).h + y + 15;
+    }
+
+    // Bowler Stats Table
+    const bowlersTable = document.getElementById('bowler-stats');
+    if (bowlersTable) {
+        pdf.setFontSize(12);
+        pdf.text('Bowler Statistics', margin, y);
+        y += 15;
+
+        const headers = [];
+        const data = [];
+
+        // Get headers
+        const ths = bowlersTable.querySelectorAll('thead th');
+        ths.forEach(th => headers.push(th.innerText));
+
+        // Get data rows
+        const trs = bowlersTable.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            const rowData = [];
+            const tds = tr.querySelectorAll('td');
+            tds.forEach(td => rowData.push(td.innerText));
+            data.push(rowData);
+        });
+
+        pdf.autoTable({
+            head: [headers],
+            body: data,
+            startX: margin,
+            startY: y,
+            margin: { horizontal: margin },
+            fontSize: 10
+        });
+        y = pdf.autoTable.previous.finalY + 15;
+    }
+
+    pdf.save('scoreboard.pdf');
 }
