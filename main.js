@@ -2,41 +2,36 @@ let scoreboard = [[], [0]]; // Initialize scoreboard
 let scoreboardInfo = {};
 let ball_no = 1;
 let over_no = 1;
-let runs = 8; // Example initial runs
+let runs = 0;
 let wickets = 0;
 let isNoBall = false;
-let team1Name = "Team A"; // Example initial team name
-let team2Name = "Team B"; // Example initial team name
-let team1Players = ["P1", "P2"]; // Example initial players
-let team2Players = ["Q1", "Q2"]; // Example initial players
+let team1Name = "";
+let team2Name = "";
+let team1Players = [];
+let team2Players = [];
 let battingTeam = 1; // 1 or 2, indicates which team is currently batting
-let battingTeamPlayers = [...team1Players];
-let bowlingTeamPlayers = [...team2Players];
-let striker = "P1"; // Example initial striker
-let nonStriker = "P2"; // Example initial non-striker
-let currentBowler = "Q1"; // Example initial bowler
-let batsmenStats = {
-    "P1": { runs: 5, balls: 3, fours: 1, sixes: 0, status: "not out", bowler: null },
-    "P2": { runs: 3, balls: 3, fours: 0, sixes: 0, status: "not out", bowler: null }
-}; // Example initial batsmen stats
+let battingTeamPlayers = [];
+let bowlingTeamPlayers = [];
+let striker = null;
+let nonStriker = null;
+let currentBowler = null;
+let batsmenStats = {}; // { playerName: { runs, balls, fours, sixes, status, bowler } }
 let fallOfWickets = [];
-let bowlersStats = {
-    "Q1": { overs: 1, maidens: 0, runsConceded: 8, wicketsTaken: 0, ballsBowled: 6 }
-}; // Example initial bowlers stats
-let battingOrder = [...battingTeamPlayers];
-let nextBatsmanIndex = 2;
-let ballsBowledThisOver = 1;
+let bowlersStats = {}; // { playerName: { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0, ballsBowled: 0 } }
+let battingOrder = [];
+let nextBatsmanIndex = 0;
+let ballsBowledThisOver = 0;
 let targetRuns = 0;
 let targetOvers = 0;
 let totalTargetBalls = 0;
 let isTargetSet = false;
-let gameStarted = true; // Flag to check if the game has started (set to true for the example)
+let gameStarted = false; // Flag to check if the game has started
 
 $(document).ready(function () {
     console.log("Document ready in main.js");
 
     $('#initialSetupModal').modal({ backdrop: 'static', keyboard: false });
-    // $('#initialSetupModal').modal('show'); // Comment out to skip initial setup for this test
+    $('#initialSetupModal').modal('show');
 
     $("#run_dot").on("click", function (event) { playBall(0); });
     $("#run_1").on("click", function (event) { playBall(1); });
@@ -65,20 +60,13 @@ $(document).ready(function () {
     // Event listener for beforeunload
     window.addEventListener('beforeunload', function (e) {
         if (gameStarted && (runs > 0 || wickets > 0 || over_no > 1 || ball_no > 1)) {
-            // Standard alert (browser might customize the message)
+            // Cancel the event
+            e.preventDefault();
+            // Chrome requires returnValue to be set
+            e.returnValue = '';
             return 'Are you sure you want to leave? Your game progress will be lost.';
         }
     });
-
-    // Manually populate dropdowns and update display for the example state
-    populateBatsmanDropdowns();
-    populateBowlerDropdown();
-    $("#strikerBatsman").val(striker).prop('selected', true);
-    $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
-    $("#currentBowler").val(currentBowler).prop('selected', true);
-    updateScoreDisplay();
-    updateRunboardDisplay();
-
 });
 
 function saveTeamData() {
@@ -96,7 +84,7 @@ function saveTeamData() {
 
         // Initialize stats
         battingTeamPlayers.forEach(player => batsmenStats[player] = { runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out", bowler: null });
-        bowlingTeamPlayers.forEach(player => bowlersStats[player] = { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0, ballsBowled: 0 };
+        bowlingTeamPlayers.forEach(player => bowlersStats[player] = { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0, ballsBowled: 0 });
 
         populateBatsmanDropdowns();
         populateBowlerDropdown();
@@ -136,8 +124,8 @@ function populateBatsmanDropdowns() {
 
     const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out");
     availableBatsmen.forEach(player => {
-        strikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
-        nonStrikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        strikerDropdown.append(`<option value="${player}">${player}</option>`);
+        nonStrikerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 
     // Select current batsmen if they are still available
@@ -153,7 +141,7 @@ function populateBowlerDropdown() {
     const bowlerDropdown = $("#currentBowler");
     bowlerDropdown.empty().append('<option value="">Select Bowler</option>');
     bowlingTeamPlayers.forEach(player => {
-        bowlerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        bowlerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 }
 
@@ -181,7 +169,7 @@ function playBall(outcome) {
         batsmenStats[striker].status = "out";
         batsmenStats[striker].bowler = currentBowler;
         bowlersStats[currentBowler].wicketsTaken++;
-        fallOfWickets.push(`${striker} - <span class="math-inline">\{runs\}\-</span>{wickets + 1} (<span class="math-inline">\{over\_no\}\.</span>{ball_no})`);
+        fallOfWickets.push(`${striker} - ${runs}-${wickets + 1} (${over_no}.${ball_no})`);
         wickets++;
         updateScoreDisplay();
         handleWicket();
@@ -281,7 +269,7 @@ function updateScoreDisplay() {
         const remainingBallsInOver = targetBallsLeft % 6;
 
         $("#targetRunsRequired").text(targetRunsRequired >= 0 ? targetRunsRequired : 0);
-        $("#targetOversLeft").text(`<span class="math-inline">\{oversLeft\}\.</span>{remainingBallsInOver >= 0 ? remainingBallsInOver : 0}`);
+        $("#targetOversLeft").text(`${oversLeft}.${remainingBallsInOver >= 0 ? remainingBallsInOver : 0}`);
 
         if (targetRuns <= runs) {
             $("#targetBody").html('Target Reached!');
@@ -296,7 +284,7 @@ function updateScoreDisplay() {
 }
 
 function updateRunboardDisplay() {
-    $("#over-ball").text(`<span class="math-inline">\{over\_no \- 1\}\.</span>{ball_no - 1}`);
+    $("#over-ball").text(`${over_no - 1}.${ball_no - 1}`);
 }
 
 function updateScoreboardModal() {
@@ -367,4 +355,8 @@ function setTarget(shouldSet = true) {
             $("#targetBoard").hide();
         }
     } else {
-        // Called when the close button on the
+        // Called when the close button on the target board is clicked
+        isTargetSet = false;
+        $("#targetBoard").hide();
+    }
+}
