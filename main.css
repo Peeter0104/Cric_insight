@@ -1,95 +1,449 @@
+/* main.css */
+
 html,
-body,
-.container {
-	margin: 0px;
-	max-width: 100%;
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Ensure body takes full viewport height */
 }
 
 body {
+    font-family: sans-serif;
     background: linear-gradient(to bottom, #33ccff 9%, #ff99cc 96%);
-    margin: 0px;
-    max-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align container to the top */
 }
 
-.col-left-custom,
-.col-left-custom {
-	width: 100%;
+.container {
+    max-width: 600px;
+    width: 95%; /* Adjust as needed */
+    margin: 20px; /* Add some margin around the container */
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
+
+.col-left-custom {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.col-left-custom h6 {
+    margin-top: 10px;
+}
+
+.col-right-custom {
+    padding: 15px;
+}
+
 .over-ball-style {
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-    margin: 0.25rem;
-    display: flex;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    padding: 0;
+    font-size: 0.8em;
+    border-radius: 50%; /* Make them circular */
+    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+    display: inline-flex; /* Use inline-flex for better alignment */
     align-items: center;
     justify-content: center;
-    padding: 0.2rem;
+    margin: 5px;
+}
+
+.over-ball-style.bowled {
+    background-color: #007bff; /* Example: Blue for bowled balls */
+    color: white;
 }
 
 @media only screen and (orientation: landscape) {
-	/* For desktops: */
-	.col-left-custom {
-		width: 70%;
-		float: left;
-		padding: 15px;
-	}
-	.col-right-custom {
-		width: 30%;
-		height: 100vh;
-		float: left;
-		padding: 15px;
-	}
+    /* For desktops: */
+    .container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap; /* Allow content to wrap if needed */
+        align-items: flex-start; /* Align items to the start of the cross-axis */
+    }
+
+    .col-left-custom {
+        width: 65%;
+        padding: 15px;
+        margin-bottom: 0; /* Remove bottom margin in landscape */
+    }
+
+    .col-right-custom {
+        width: 35%;
+        height: auto; /* Adjust height based on content */
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start; /* Align content to the top */
+    }
+
+    .button-grid {
+        grid-template-columns: repeat(2, 1fr); /* Adjust button grid for landscape */
+    }
 }
 
 .center {
-	margin: auto;
-	width: 100%;
-	border: 3px solid green;
-	padding: 10px;
+    margin: auto;
+    width: 100%;
+    padding: 10px;
 }
 
 .btn-custom {
-	display: inline-block;
-	width: 100%;
+    display: block; /* Make buttons take full width */
+    width: 100%;
+    padding: 0.75rem 1.25rem; /* Increased padding */
+    font-size: 1rem;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    border: 1px solid #007bff; /* Default border */
+    color: #007bff; /* Default text color */
+    background-color: transparent; /* Default background */
+    margin-bottom: 10px; /* Spacing between buttons */
+    cursor: pointer;
+    text-align: center; /* Center text in buttons */
+    text-decoration: none; /* Remove default link underline */
+}
+
+.btn-custom:hover {
+    background-color: #007bff;
+    color: #fff;
+    opacity: 0.9;
 }
 
 .btn-custom-lg {
-	height: 4.5em;
+    font-size: 1.25rem;
+    padding: 1rem 2rem;
+    height: auto; /* Adjust height based on content */
 }
+
 .btn-custom-sm {
-	height: 3em;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    height: auto; /* Adjust height based on content */
 }
+
+.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: #fff;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
 table {
-	font-family: arial, sans-serif;
-	border-collapse: collapse;
-	width: 100%;
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
 }
 
 td,
 th {
-	border: 1px solid #dddddd;
-	text-align: left;
-	padding: 8px;
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
 }
 
 tr:nth-child(even) {
-	background-color: #dddddd;
+    background-color: #f9f9f9;
 }
 
 .material-symbols-outlined {
-	font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 200, "opsz" 24;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24; /* Adjusted GRAD */
+    vertical-align: middle; /* Align icons vertically with text */
 }
 
 .transparent-input {
     background-color: transparent !important;
     border: none; /* Remove the border for a cleaner look */
-    color: #000; /* Set a default text color for visibility */
-    padding: 0.5rem; /* Add some padding inside the text field */
-    text-align: center; /* Center the text within the field */
+    border-bottom: 1px solid #ccc; /* Add a subtle bottom border */
+    color: #333; /* Set a default text color for visibility */
+    padding: 0.5rem 0; /* Adjust vertical padding */
+    text-align: left; /* Align text to the left in input fields */
+    width: 100%; /* Make input fields take full width */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 .transparent-input::placeholder {
     color: #777; /* Style the placeholder text */
     opacity: 1; /* Ensure placeholder is visible */
-    text-align: center; /* Center the placeholder text */
+    text-align: left; /* Align placeholder text to the left */
+}
+
+.transparent-input:focus {
+    outline: none; /* Remove default focus outline */
+    border-bottom-color: #007bff; /* Highlight bottom border on focus */
+    box-shadow: none; /* Remove default focus shadow */
+}
+
+/* Scoreboard Modal Styles */
+#myModal .modal-dialog {
+    max-width: 80%; /* Adjust modal width as needed */
+    margin: 1.75rem auto; /* Center the modal */
+}
+
+#myModal .modal-content {
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+#myModal .modal-header {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#myModal .modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+#myModal .close {
+    padding: 0;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    opacity: .7;
+}
+
+#myModal .close:hover {
+    opacity: .9;
+}
+
+#myModal .modal-body {
+    padding: 1rem 0;
+}
+
+#myModal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#myModal .modal-footer .btn-default {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#myModal .modal-footer .btn-default:hover {
+    background-color: #e2e6ea;
+}
+
+/* Undo Modal Styles (Adjust as needed) */
+#myModal2 .modal-dialog {
+    max-width: 500px;
+    margin: 1.75rem auto;
+}
+
+#myModal2 .modal-content {
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+#myModal2 .modal-header {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#myModal2 .modal-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+#myModal2 .modal-body {
+    padding: 1rem 0;
+}
+
+#myModal2 .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#myModal2 .modal-footer .btn-default {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#myModal2 .modal-footer .btn-default:hover {
+    background-color: #e2e6ea;
+}
+
+#myModal2 .modal-footer .btn-danger {
+    margin-left: 10px;
+}
+
+/* Button Grid Styling */
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.button-grid .run-btn button {
+    width: 100%;
+    height: 60px; /* Adjust button height */
+    font-size: 1.2em; /* Adjust button font size */
+    border-radius: 5px;
+}
+
+/* Footer Links Styling */
+.container > div:last-child { /* Select the last div in the container (where links are) */
+    margin-top: 20px;
+    text-align: center;
+}
+
+.container > div:last-child button {
+    border: none;
+    background: none;
+    color: #007bff;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.container > div:last-child button:hover {
+    text-decoration: underline;
+}
+
+/* Alert Styling */
+.alert-primary {
+    color: #004085;
+    background-color: #cce5ff;
+    border-color: #b8daff;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.alert-primary .btn-close {
+    padding: 0.25rem 0.5rem;
+    margin-left: 10px;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.alert-primary .btn-close:hover {
+    opacity: 0.75;
+}
+
+/* Initial Setup Modal Styling */
+#initialSetupModal .modal-dialog {
+    max-width: 500px; /* Adjust modal width if needed */
+}
+
+#initialSetupModal .modal-body {
+    padding: 20px;
+}
+
+#initialSetupModal .modal-footer {
+    padding: 15px;
+}
+
+#initialSetupModal h6 {
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#initialSetupModal .form-group label {
+    font-weight: normal;
+    display: block;
+    margin-bottom: 5px;
+}
+
+#initialSetupModal .form-group textarea.form-control,
+#initialSetupModal .form-group input.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+}
+
+/* Dropdown Styling */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group select.form-control {
+    width: 100%;
+    padding: 0.5rem 0.75rem; /* Adjust padding */
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    appearance: none; /* Remove default arrow */
+    background-image: url('data:image/svg+xml;charset=utf8,%3Csvg fill%3D%22%23343a40%22 viewBox%3D%220 0 4 5%22%3E%3Cpath fill-rule%3D%22evenodd%22 d%3D%22M2 0L0 2h4L2 0z%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 8px 10px;
+    box-sizing: border-box;
+}
+
+.form-group select.form-control:focus {
+    outline: 0;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
