@@ -179,7 +179,6 @@ function playBall(outcome) {
   }
 
   updateRunboardDisplay();
-  updateScoreboardModal();
   populateBatsmanDropdowns(); // Update dropdowns after each ball (for out players)
 }
 
