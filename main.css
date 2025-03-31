@@ -1,0 +1,95 @@
+html,
+body,
+.container {
+	margin: 0px;
+	max-width: 100%;
+}
+
+body {
+    background: linear-gradient(to bottom, #33ccff 9%, #ff99cc 96%);
+    margin: 0px;
+    max-width: 100%;
+}
+
+.col-left-custom,
+.col-left-custom {
+	width: 100%;
+}
+.over-ball-style {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+    margin: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
+}
+
+@media only screen and (orientation: landscape) {
+	/* For desktops: */
+	.col-left-custom {
+		width: 70%;
+		float: left;
+		padding: 15px;
+	}
+	.col-right-custom {
+		width: 30%;
+		height: 100vh;
+		float: left;
+		padding: 15px;
+	}
+}
+
+.center {
+	margin: auto;
+	width: 100%;
+	border: 3px solid green;
+	padding: 10px;
+}
+
+.btn-custom {
+	display: inline-block;
+	width: 100%;
+}
+
+.btn-custom-lg {
+	height: 4.5em;
+}
+.btn-custom-sm {
+	height: 3em;
+}
+table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+td,
+th {
+	border: 1px solid #dddddd;
+	text-align: left;
+	padding: 8px;
+}
+
+tr:nth-child(even) {
+	background-color: #dddddd;
+}
+
+.material-symbols-outlined {
+	font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 200, "opsz" 24;
+}
+
+.transparent-input {
+    background-color: transparent !important;
+    border: none; /* Remove the border for a cleaner look */
+    color: #000; /* Set a default text color for visibility */
+    padding: 0.5rem; /* Add some padding inside the text field */
+    text-align: center; /* Center the text within the field */
+}
+
+.transparent-input::placeholder {
+    color: #777; /* Style the placeholder text */
+    opacity: 1; /* Ensure placeholder is visible */
+    text-align: center; /* Center the placeholder text */
+}
