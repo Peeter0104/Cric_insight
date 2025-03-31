@@ -20,7 +20,7 @@ let fallOfWickets = [];
 let bowlersStats = {}; // { playerName: { overs: { [overNumber]: { ballsBowled, runsConceded, wicketsTaken } }, totalMaidens, totalRunsConceded, totalWicketsTaken } }
 let battingOrder = [];
 let nextBatsmanIndex = 0;
-let history = []; // Array to store the history of each ball
+let history = []; // Array to store the history of each valid ball
 
 $(document).ready(function () {
     console.log("Document ready in main.js");
@@ -38,8 +38,7 @@ $(document).ready(function () {
     $("#run_6").on("click", function (event) { playBall(6); });
     $("#run_W").on("click", function (event) { playBall("Out"); });
     $("#scoreboard-btn").on("click", function (event) { updateScoreboardModal(); });
-    $("#undo-btn").on("click", function (event) { $('#myModal2').modal('show'); }); // Show undo confirmation modal
-    $("#confirm-undo-btn").on("click", function (event) { undoLastAction(); $('#myModal2').modal('hide'); }); // Handle actual undo
+    $("#undo-btn").on("click", function (event) { undoLastAction(); });
 
     $("#strikerBatsman").change(function () {
         striker = $(this).val();
@@ -80,6 +79,7 @@ function saveTeamData() {
         setInitialBatsmen();
         updateScoreDisplay();
         updateRunboardDisplay();
+        updateBallIndicators();
 
         $('#initialSetupModal').modal('hide');
     } else {
@@ -108,8 +108,8 @@ function populateBatsmanDropdowns() {
 
     const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out");
     availableBatsmen.forEach(player => {
-        strikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
-        nonStrikerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        strikerDropdown.append(`<option value="${player}">${player}</option>`);
+        nonStrikerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 
     // Select current batsmen if they are still available
@@ -125,7 +125,7 @@ function populateBowlerDropdown() {
     const bowlerDropdown = $("#currentBowler");
     bowlerDropdown.empty().append('<option value="">Select Bowler</option>');
     bowlingTeamPlayers.forEach(player => {
-        bowlerDropdown.append(`<option value="<span class="math-inline">\{player\}"\></span>{player}</option>`);
+        bowlerDropdown.append(`<option value="${player}">${player}</option>`);
     });
 }
 
@@ -149,7 +149,10 @@ function playBall(outcome) {
         fallOfWickets: [...fallOfWickets],
         isNoBall: isNoBall
     };
-    history.push(ballData);
+
+    if (outcome !== "Wd" && outcome !== "Nb") {
+        history.push(ballData); // Only store valid balls for undo
+    }
 
     if (outcome === "Wd") {
         runs++;
@@ -169,7 +172,7 @@ function playBall(outcome) {
         bowlersStats[currentBowler].totalWicketsTaken = (bowlersStats[currentBowler].totalWicketsTaken || 0) + 1;
         bowlersStats[currentBowler].overs[over_no] = bowlersStats[currentBowler].overs[over_no] || { ballsBowled: 0, runsConceded: 0, wicketsTaken: 0 };
         bowlersStats[currentBowler].overs[over_no].wicketsTaken++;
-        fallOfWickets.push(`${striker} - <span class="math-inline">\{runs\}\-</span>{wickets + 1} (<span class="math-inline">\{over\_no\}\.</span>{ball_no})`);
+        fallOfWickets.push(`${striker} - ${runs}-${wickets + 1} (${over_no}.${ball_no})`);
         wickets++;
         updateScoreDisplay();
         handleWicket();
@@ -197,6 +200,7 @@ function playBall(outcome) {
         }
         if (!isNoBall && outcome !== "Out") {
             ball_no++;
+            updateBallIndicators();
             if (ball_no > 6) {
                 endOfOver();
             }
@@ -243,6 +247,7 @@ function endOfOver() {
     scoreboard[over_no] = scoreboard[over_no] || [0];
     swapStrike();
     updateRunboardDisplay();
+    updateBallIndicators(); // Reset ball indicators for the new over
     // Alert to change bowler (you might want a more UI-friendly way)
     alert("Over ended. Please select the bowler for the next over.");
 }
@@ -261,7 +266,14 @@ function updateScoreDisplay() {
 }
 
 function updateRunboardDisplay() {
-    $("#over-ball").text(`<span class="math-inline">\{over\_no \- 1\}\.</span>{ball_no - 1}`);
+    $("#over-ball").text(`${over_no - 1}.${ball_no - 1}`);
+}
+
+function updateBallIndicators() {
+    $(".over-ball-style").removeClass("bowled"); // Reset all indicators
+    for (let i = 1; i < ball_no; i++) {
+        $("#ball_no_" + i).addClass("bowled");
+    }
 }
 
 function updateScoreboardModal() {
@@ -294,31 +306,30 @@ function updateScoreboardModal() {
     bowlerStatsBody.empty();
     for (const bowler in bowlersStats) {
         if (bowlingTeamPlayers.includes(bowler)) {
-            let totalOvers = 0;
-            let totalRuns = 0;
-            let totalWickets = 0;
-            let totalMaidens = 0;
+            let ballsBowled = 0;
+            let runsConceded = 0;
+            let wicketsTaken = 0;
+            let maidens = 0;
 
             for (const over in bowlersStats[bowler].overs) {
                 const overData = bowlersStats[bowler].overs[over];
-                totalRuns += overData.runsConceded;
-                totalWickets += overData.wicketsTaken;
-                totalOvers += overData.ballsBowled / 6;
+                ballsBowled += overData.ballsBowled;
+                runsConceded += overData.runsConceded;
+                wicketsTaken += overData.wicketsTaken;
                 if (overData.runsConceded === 0 && overData.ballsBowled === 6) {
-                    totalMaidens++;
+                    maidens++;
                 }
             }
 
-            const currentOverBalls = (currentBowler === bowler && ball_no > 1 && ball_no <= 6) ? (ball_no - 1) : 0;
-            const displayOvers = Math.floor(totalOvers) + currentOverBalls / 6;
+            const overs = Math.floor(ballsBowled / 6) + (ballsBowled % 6) / 10; // Format as X.Y
 
             const row = $("<tr></tr>");
             row.append(`<td>${bowler}</td>`);
-            row.append(`<td>${displayOvers.toFixed(1)}</td>`);
-            row.append(`<td>${totalMaidens}</td>`);
-            row.append(`<td>${totalRuns}</td>`);
-            row.append(`<td>${totalWickets}</td>`);
-            row.append(`<td>${totalOvers > 0 || currentOverBalls > 0 ? (totalRuns / (totalOvers + currentOverBalls / 6)).toFixed(2) : '0.00'}</td>`);
+            row.append(`<td>${overs.toFixed(1)}</td>`);
+            row.append(`<td>${maidens}</td>`);
+            row.append(`<td>${runsConceded}</td>`);
+            row.append(`<td>${wicketsTaken}</td>`);
+            row.append(`<td>${ballsBowled > 0 ? (runsConceded / (ballsBowled / 6)).toFixed(2) : '0.00'}</td>`);
             bowlerStatsBody.append(row);
         }
     }
@@ -330,29 +341,26 @@ function undoLastAction() {
     if (history.length > 0) {
         const lastAction = history.pop();
 
-        if (lastAction.outcome !== "Wd" && lastAction.outcome !== "Nb") {
-            runs = lastAction.runs;
-            wickets = lastAction.wickets;
-            ball_no = lastAction.ball_no;
-            over_no = lastAction.over_no;
-            striker = lastAction.striker;
-            nonStriker = lastAction.nonStriker;
-            currentBowler = lastAction.bowler;
-            batsmenStats = JSON.parse(JSON.stringify(lastAction.batsmenStats));
-            bowlersStats = JSON.parse(JSON.stringify(lastAction.bowlersStats));
-            fallOfWickets = [...lastAction.fallOfWickets];
-            isNoBall = lastAction.isNoBall;
-            $("#no-ball-warning").toggle(isNoBall);
+        runs = lastAction.runs;
+        wickets = lastAction.wickets;
+        ball_no = lastAction.ball_no;
+        over_no = lastAction.over_no;
+        striker = lastAction.striker;
+        nonStriker = lastAction.nonStriker;
+        currentBowler = lastAction.bowler;
+        batsmenStats = JSON.parse(JSON.stringify(lastAction.batsmenStats));
+        bowlersStats = JSON.parse(JSON.stringify(lastAction.bowlersStats));
+        fallOfWickets = [...lastAction.fallOfWickets];
+        isNoBall = lastAction.isNoBall;
+        $("#no-ball-warning").toggle(isNoBall);
 
-            updateScoreDisplay();
-            updateRunboardDisplay();
-            populateBatsmanDropdowns();
-            populateBowlerDropdown();
-            $("#strikerBatsman").val(striker).prop('selected', true);
-            $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
-            $("#currentBowler").val(currentBowler).prop('selected', true);
-            updateScoreboardModal(); // Update scoreboard after undo
-        } else {
-            alert("Wide and No ball actions cannot be undone.");
-        }
+        updateScoreDisplay();
+        updateRunboardDisplay();
+        updateBallIndicators();
+        populateBatsmanDropdowns();
+        updateScoreboardModal(); // Crucial: Update scoreboard after undo
+    } else {
+        alert("No previous valid action to undo.");
     }
+    $('#myModal2').modal('hide'); // Close the undo modal
+}
