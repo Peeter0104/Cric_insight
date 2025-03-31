@@ -306,7 +306,8 @@ function updateScoreboardModal() {
     for (const bowler in bowlersStats) {
         if (bowlingTeamPlayers.includes(bowler)) {
             const stats = bowlersStats[bowler];
-            const oversBowled = stats.overs + (currentBowler === bowler ? ballsBowledThisOver / 6 : 0);
+            // Corrected line: Access individual bowler's overs directly
+            const oversBowled = stats.overs || 0;
             const economy = oversBowled > 0 ? (stats.runsConceded / oversBowled).toFixed(2) : '0.00';
 
             const row = $("<tr></tr>");
