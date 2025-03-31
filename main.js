@@ -17,9 +17,10 @@ let nonStriker = null;
 let currentBowler = null;
 let batsmenStats = {}; // { playerName: { runs, balls, fours, sixes, status, bowler } }
 let fallOfWickets = [];
-let bowlersStats = {}; // { playerName: { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0 } }
+let bowlersStats = {}; // { playerName: { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0, ballsBowled: 0 } }
 let battingOrder = [];
 let nextBatsmanIndex = 0;
+let ballsBowledThisOver = 0;
 
 $(document).ready(function () {
     console.log("Document ready in main.js");
@@ -67,7 +68,7 @@ function saveTeamData() {
 
         // Initialize stats
         battingTeamPlayers.forEach(player => batsmenStats[player] = { runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out", bowler: null });
-        bowlingTeamPlayers.forEach(player => bowlersStats[player] = { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0 });
+        bowlingTeamPlayers.forEach(player => bowlersStats[player] = { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0, ballsBowled: 0 });
 
         populateBatsmanDropdowns();
         populateBowlerDropdown();
@@ -75,6 +76,7 @@ function saveTeamData() {
         setInitialBatsmen();
         updateScoreDisplay();
         updateRunboardDisplay();
+        ballsBowledThisOver = 0; // Initialize for the first over
 
         $('#initialSetupModal').modal('hide');
     } else {
@@ -132,11 +134,13 @@ function playBall(outcome) {
 
     if (outcome === "Wd") {
         runs++;
+        bowlersStats[currentBowler].runsConceded++;
         scoreboard[over_no] = scoreboard[over_no] || [0];
         scoreboard[over_no][0] = (scoreboard[over_no][0] || 0) + 1;
         updateScoreDisplay();
     } else if (outcome === "Nb") {
         runs++;
+        bowlersStats[currentBowler].runsConceded++;
         scoreboard[over_no] = scoreboard[over_no] || [0];
         scoreboard[over_no][0] = (scoreboard[over_no][0] || 0) + 1;
         isNoBall = true;
@@ -154,6 +158,7 @@ function playBall(outcome) {
     } else if (typeof outcome === 'number') {
         batsmenStats[striker].runs += outcome;
         runs += outcome;
+        bowlersStats[currentBowler].runsConceded += outcome;
         if (outcome === 4) batsmenStats[striker].fours++;
         if (outcome === 6) batsmenStats[striker].sixes++;
         updateScoreDisplay();
@@ -165,14 +170,13 @@ function playBall(outcome) {
 
     if (outcome !== "Wd" && !isNoBall && outcome !== "Out") {
         batsmenStats[striker].balls++;
-        bowlersStats[currentBowler].runsConceded += (typeof outcome === 'number' ? outcome : 0);
+        ballsBowledThisOver++;
         ball_no++;
         if (ball_no > 6) {
             endOfOver();
         }
     } else if (isNoBall && typeof outcome === 'number') {
         batsmenStats[striker].balls++; // No ball still counts as a ball faced for batsman if runs are scored
-        bowlersStats[currentBowler].runsConceded += outcome;
         isNoBall = false;
         $("#no-ball-warning").hide();
     } else if (isNoBall && outcome === 0) {
@@ -220,6 +224,7 @@ function endOfOver() {
     if (currentBowler) {
         bowlersStats[currentBowler].overs++;
     }
+    ballsBowledThisOver = 0; // Reset for the new over
     // Alert to change bowler (you might want a more UI-friendly way)
     alert("Over ended. Please select the bowler for the next over.");
 }
@@ -269,56 +274,18 @@ function updateScoreboardModal() {
 
     const bowlerStatsBody = $("#bowler-stats-body");
     bowlerStatsBody.empty();
-    const bowlerOvers = {};
-    const bowlerRunsConceded = {};
-
-    // Initialize over and run counts for each bowler
-    bowlingTeamPlayers.forEach(bowler => {
-        bowlerOvers[bowler] = 0;
-        bowlerRunsConceded[bowler] = 0;
-    });
-
-    // Iterate through the scoreboard to count overs and runs
-    for (let i = 1; i < over_no; i++) {
-        const overData = scoreboard[i];
-        const bowler = scoreboardInfo[i - 1]?.bowler; // Get the bowler for the over
-
-        if (bowler && overData) {
-            let validBalls = 0;
-            let runsInOver = 0;
-            for (const ball of overData) {
-                if (typeof ball === 'number') {
-                    runsInOver += ball;
-                    validBalls++;
-                } else if (ball === 'Wd' || ball === 'Nb') {
-                    runsInOver += 1;
-                }
-            }
-            bowlerOvers[bowler] += (validBalls / 6);
-            bowlerRunsConceded[bowler] += runsInOver;
-        }
-    }
-
-    // Add the current over's balls and runs if the over is in progress
-    if (currentBowler && scoreboard[over_no]) {
-        let validBallsCurrentOver = ball_no - 1;
-        let runsCurrentOver = scoreboard[over_no].reduce((sum, ball) => (typeof ball === 'number' ? sum + ball : (ball === 'Wd' || ball === 'Nb' ? sum + 1 : sum)), 0);
-        bowlerOvers[currentBowler] += (validBallsCurrentOver / 6);
-        bowlerRunsConceded[currentBowler] += runsCurrentOver;
-    }
 
     for (const bowler in bowlersStats) {
         if (bowlingTeamPlayers.includes(bowler)) {
             const stats = bowlersStats[bowler];
-            const oversBowled = bowlerOvers[bowler] || 0;
-            const runsConcededByBowler = bowlerRunsConceded[bowler] || 0;
-            const economy = oversBowled > 0 ? (runsConcededByBowler / oversBowled).toFixed(2) : '0.00';
+            const oversBowled = stats.overs + (currentBowler === bowler ? ballsBowledThisOver / 6 : 0);
+            const economy = oversBowled > 0 ? (stats.runsConceded / oversBowled).toFixed(2) : '0.00';
 
             const row = $("<tr></tr>");
             row.append(`<td>${bowler}</td>`);
             row.append(`<td>${oversBowled.toFixed(1)}</td>`);
             row.append(`<td>${stats.maidens}</td>`);
-            row.append(`<td>${runsConcededByBowler}</td>`);
+            row.append(`<td>${stats.runsConceded}</td>`);
             row.append(`<td>${stats.wicketsTaken}</td>`);
             row.append(`<td>${economy}</td>`);
             bowlerStatsBody.append(row);
