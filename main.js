@@ -1,57 +1,43 @@
-var scoreboard = [[], [0]]; // Initialize with an empty first element and the first over with 0 extras
-var scoreboardInfo = {};
-var ball_no = 1;
-var over_no = 1;
-var runs = 0;
-var wickets = 0;
-var edited = [];
-var isNoBall = false;
-var isTargetMode = false;
-var targetRuns = -1;
-var targetOvers = -1;
-var isShareMode = false;
-let currentMatchCode = -1;
-let client = null;
-let isStartConnectDone = false;
-let topic = "";
-let clientID = "";
-let host = "test.mosquitto.org";
-let port = 8080;
-
+let scoreboard = [[], [0]]; // Initialize scoreboard
+let scoreboardInfo = {};
+let ball_no = 1;
+let over_no = 1;
+let runs = 0;
+let wickets = 0;
+let isNoBall = false;
 let team1Name = "";
 let team2Name = "";
 let team1Players = [];
 let team2Players = [];
+let battingTeam = 1; // 1 or 2, indicates which team is currently batting
 let battingTeamPlayers = [];
 let bowlingTeamPlayers = [];
 let striker = null;
 let nonStriker = null;
 let currentBowler = null;
-let batsmenStats = {}; // Object to store batsman stats (name: {runs, balls, fours, sixes, status, bowler})
+let batsmenStats = {}; // { playerName: { runs, balls, fours, sixes, status, bowler } }
 let fallOfWickets = [];
-let bowlersStats = {}; // Object to store bowler stats (name: {overs, maidens, runsConceded, wicketsTaken})
+let bowlersStats = {}; // { playerName: { overs, maidens, runsConceded, wicketsTaken } }
 let battingOrder = [];
-let wicketsFallen = 0;
+let nextBatsmanIndex = 0;
 
 $(document).ready(function () {
   console.log("Document ready in main.js");
 
-  // Show initial setup modal on page load
+  $('#initialSetupModal').modal({ backdrop: 'static', keyboard: false });
   $('#initialSetupModal').modal('show');
 
-  $("#run_dot").on("click", function (event) { if (!isShareMode && striker) play_ball(0); });
-  $("#run_1").on("click", function (event) { if (!isShareMode && striker) play_ball(1); });
-  $("#run_2").on("click", function (event) { if (!isShareMode && striker) play_ball(2); });
-  $("#run_3").on("click", function (event) { if (!isShareMode && striker) play_ball(3); });
-  $("#run_wide").on("click", function (event) { if (!isShareMode && currentBowler) play_ball("+"); });
-  $("#run_no_ball").on("click", function (event) { if (!isShareMode && currentBowler) play_ball("NB"); });
-  $("#run_4").on("click", function (event) { if (!isShareMode && striker) play_ball(4); });
-  $("#run_6").on("click", function (event) { if (!isShareMode && striker) play_ball(6); });
-  $("#run_W").on("click", function (event) { if (!isShareMode && striker && currentBowler) play_ball("W"); });
-  $("#scoreboard-btn").on("click", function (event) { update_scoreboard_modal(); });
-  $("#shareMatchCodeButton").on("click", function (event) { generateShareLink(); });
+  $("#run_dot").on("click", function (event) { playBall(0); });
+  $("#run_1").on("click", function (event) { playBall(1); });
+  $("#run_2").on("click", function (event) { playBall(2); });
+  $("#run_3").on("click", function (event) { playBall(3); });
+  $("#run_wide").on("click", function (event) { playBall("Wd"); });
+  $("#run_no_ball").on("click", function (event) { playBall("Nb"); });
+  $("#run_4").on("click", function (event) { playBall(4); });
+  $("#run_6").on("click", function (event) { playBall(6); });
+  $("#run_W").on("click", function (event) { playBall("Out"); });
+  $("#scoreboard-btn").on("click", function (event) { updateScoreboardModal(); });
 
-  // Event listeners for dropdown changes
   $("#strikerBatsman").change(function () {
     striker = $(this).val();
     console.log("Striker selected:", striker);
@@ -64,18 +50,7 @@ $(document).ready(function () {
     currentBowler = $(this).val();
     console.log("Bowler selected:", currentBowler);
   });
-
-  init();
 });
-
-function init() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const matchCodeFromUrl = urlParams.get("matchCode");
-  if (matchCodeFromUrl) { isShareMode = true; disableEditing(); startConnect(matchCodeFromUrl); } else { /* Initial setup modal handles this */ }
-  if (urlParams.get("debug") == null || urlParams.get("debug") != "true") { $("#messages").hide(); }
-  update_score_display();
-  update_runboard();
-}
 
 function saveTeamData() {
   team1Name = $("#team1Name").val().trim();
@@ -84,50 +59,59 @@ function saveTeamData() {
   team2Players = $("#team2Players").val().split('\n').map(p => p.trim()).filter(p => p !== "");
 
   if (team1Players.length > 0 && team2Players.length > 0) {
-    // For now, let's assume Team 1 is batting first and Team 2 is bowling
+    // Basic logic: Team 1 bats first
     battingTeamPlayers = [...team1Players];
     bowlingTeamPlayers = [...team2Players];
-    battingOrder = [...battingTeamPlayers]; // Initial batting order
+    battingOrder = [...battingTeamPlayers];
+    nextBatsmanIndex = 0;
 
-    // Initialize batsman stats
-    battingTeamPlayers.forEach(player => {
-      batsmenStats[player] = { runs: 0, balls: 0, fours: 0, sixes: 0, status: "batting", bowler: null };
-    });
-    team2Players.forEach(player => {
-      bowlersStats[player] = { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0 };
-    });
+    // Initialize stats
+    battingTeamPlayers.forEach(player => batsmenStats[player] = { runs: 0, balls: 0, fours: 0, sixes: 0, status: "not out", bowler: null });
+    bowlingTeamPlayers.forEach(player => bowlersStats[player] = { overs: 0, maidens: 0, runsConceded: 0, wicketsTaken: 0 });
 
     populateBatsmanDropdowns();
     populateBowlerDropdown();
 
-    // Set initial striker and non-striker (first two in the batting order)
-    if (battingTeamPlayers.length >= 2) {
-      striker = battingTeamPlayers[0];
-      nonStriker = battingTeamPlayers[1];
-      $("#strikerBatsman").val(striker).prop('selected', true);
-      $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
-    } else if (battingTeamPlayers.length === 1) {
-      striker = battingTeamPlayers[0];
-      $("#strikerBatsman").val(striker).prop('selected', true);
-    }
+    setInitialBatsmen();
 
     $('#initialSetupModal').modal('hide');
-    startConnect(); // Initialize MQTT connection after setup
   } else {
     alert("Please enter players for both teams.");
+  }
+}
+
+function setInitialBatsmen() {
+  const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out");
+  if (availableBatsmen.length >= 1) {
+    striker = availableBatsmen[0];
+    $("#strikerBatsman").val(striker).prop('selected', true);
+  }
+  if (availableBatsmen.length >= 2) {
+    nonStriker = availableBatsmen[1];
+    $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
   }
 }
 
 function populateBatsmanDropdowns() {
   const strikerDropdown = $("#strikerBatsman");
   const nonStrikerDropdown = $("#nonStrikerBatsman");
+
   strikerDropdown.empty().append('<option value="">Select Striker</option>');
   nonStrikerDropdown.empty().append('<option value="">Select Non-Striker</option>');
 
-  battingTeamPlayers.filter(player => batsmenStats[player].status === "batting").forEach(player => {
+  const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out");
+  availableBatsmen.forEach(player => {
     strikerDropdown.append(`<option value="${player}">${player}</option>`);
     nonStrikerDropdown.append(`<option value="${player}">${player}</option>`);
   });
+
+  // Select current batsmen if they are still available
+  if (striker && availableBatsmen.includes(striker)) {
+    $("#strikerBatsman").val(striker).prop('selected', true);
+  }
+  if (nonStriker && availableBatsmen.includes(nonStriker)) {
+    $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
+  }
 }
 
 function populateBowlerDropdown() {
@@ -138,58 +122,69 @@ function populateBowlerDropdown() {
   });
 }
 
-function disableEditing() { /* ... */ }
-function generateShareLink() { /* ... */ }
-
-function play_ball(run) {
-  if (isShareMode || !striker || !currentBowler) return;
-
-  batsmenStats[striker].balls++;
-  bowlersStats[currentBowler].runsConceded += (Number.isInteger(run) ? run : (run === "+" ? 1 : 0));
-
-  if (run === "+") {
-    runs++;
-    scoreboard[over_no][0] = (scoreboard[over_no][0] || 0) + 1;
-    publishUpdate({ type: "run", value: run });
-  } else if (run === "NB") {
-    noBall(true);
-    runs++;
-    scoreboard[over_no][0] = (scoreboard[over_no][0] || 0) + 1;
-    publishUpdate({ type: "run", value: run });
+function playBall(outcome) {
+  if (!striker || !currentBowler) {
+    alert("Please select both striker and bowler.");
     return;
-  } else if (run === "W") {
-    wickets++;
+  }
+
+  if (outcome === "Wd") {
+    runs++;
+    scoreboard[over_no] = scoreboard[over_no] || [0];
+    scoreboard[over_no][0] = (scoreboard[over_no][0] || 0) + 1;
+    updateScoreDisplay();
+  } else if (outcome === "Nb") {
+    runs++;
+    scoreboard[over_no] = scoreboard[over_no] || [0];
+    scoreboard[over_no][0] = (scoreboard[over_no][0] || 0) + 1;
+    isNoBall = true;
+    $("#no-ball-warning").show();
+    updateScoreDisplay();
+  } else if (outcome === "Out") {
     batsmenStats[striker].status = "out";
     batsmenStats[striker].bowler = currentBowler;
     bowlersStats[currentBowler].wicketsTaken++;
-    fallOfWickets.push(`${striker} - ${runs}-${wickets} (${over_no}.${ball_no})`);
-    publishUpdate({ type: "wicket" });
+    fallOfWickets.push(`${striker} - ${runs}-${wickets + 1} (${over_no}.${ball_no})`);
+    wickets++;
+    updateScoreDisplay();
     handleWicket();
-  } else if (Number.isInteger(run)) {
-    runs += run;
-    batsmenStats[striker].runs += run;
-    if (run === 4) batsmenStats[striker].fours++;
-    if (run === 6) batsmenStats[striker].sixes++;
-    publishUpdate({ type: "run", value: run });
-    handleRun(run);
+    endOfBall();
+  } else if (typeof outcome === 'number') {
+    batsmenStats[striker].runs += outcome;
+    runs += outcome;
+    if (outcome === 4) batsmenStats[striker].fours++;
+    if (outcome === 6) batsmenStats[striker].sixes++;
+    updateScoreDisplay();
+    handleRun(outcome);
+    endOfBall();
+  } else if (outcome === 0) {
+    endOfBall();
   }
 
-  if (run !== "+" && !isNoBall) {
-    update_runboard();
+  if (outcome !== "Wd" && !isNoBall && outcome !== "Out") {
+    batsmenStats[striker].balls++;
+    bowlersStats[currentBowler].runsConceded += (typeof outcome === 'number' ? outcome : 0);
     ball_no++;
-    if (ball_no >= 7) {
+    if (ball_no > 6) {
       endOfOver();
     }
-  } else if (isNoBall && run !== "+") {
-    scoreboard[over_no][ball_no] = run === 0 ? "D" : parseInt(run);
-    update_runboard();
-    noBall(false);
-    publishUpdate({ type: "noBallRun", value: run });
+  } else if (isNoBall && typeof outcome === 'number') {
+    batsmenStats[striker].balls++; // No ball still counts as a ball faced for batsman if runs are scored
+    bowlersStats[currentBowler].runsConceded += outcome;
+    isNoBall = false;
+    $("#no-ball-warning").hide();
+  } else if (isNoBall && outcome === 0) {
+    isNoBall = false;
+    $("#no-ball-warning").hide();
   }
 
-  update_score_display();
-  update_scoreboard_modal();
-  console.log("After play_ball - Over:", over_no, "Ball:", ball_no, "Scoreboard:", scoreboard, "Batsmen Stats:", batsmenStats);
+  updateRunboardDisplay();
+  updateScoreboardModal();
+  populateBatsmanDropdowns(); // Update dropdowns after each ball (for out players)
+}
+
+function endOfBall() {
+  updateRunboardDisplay();
 }
 
 function handleRun(run) {
@@ -199,26 +194,29 @@ function handleRun(run) {
 }
 
 function handleWicket() {
-  battingTeamPlayers = battingTeamPlayers.filter(player => batsmenStats[player].status === "batting");
-  populateBatsmanDropdowns();
-  if (battingTeamPlayers.length > 0) {
-    striker = battingTeamPlayers[0]; // Next batsman in order takes strike
-    $("#strikerBatsman").val(striker).prop('selected', true);
+  const availableBatsmen = battingTeamPlayers.filter(player => batsmenStats[player].status === "not out" && player !== striker && player !== nonStriker);
+  if (availableBatsmen.length > 0) {
+    const newBatsman = availableBatsmen[0];
+    if (striker) {
+      nonStriker = newBatsman;
+      $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
+    } else {
+      striker = newBatsman;
+      $("#strikerBatsman").val(striker).prop('selected', true);
+    }
   } else {
+    if (striker) batsmenStats[striker].status = "out"; // Mark remaining as out?
     striker = null;
   }
-  // Non-striker remains the same
 }
 
 function endOfOver() {
-  saveBowlerName(); // Though we are selecting from dropdown now
   ball_no = 1;
   over_no++;
-  scoreboard[over_no] = [0]; // Ensure new over starts with [0] for extras
-  console.log("Started new over:", over_no, "Scoreboard:", scoreboard);
-  swapStrike(); // Strike changes at the end of the over
-  update_runboard();
-  // For the next over, you'll need to select a new bowler
+  scoreboard[over_no] = scoreboard[over_no] || [0];
+  swapStrike();
+  updateRunboardDisplay();
+  // Alert to change bowler (you might want a more UI-friendly way)
   alert("Over ended. Please select the bowler for the next over.");
 }
 
@@ -228,30 +226,24 @@ function swapStrike() {
   nonStriker = temp;
   $("#strikerBatsman").val(striker).prop('selected', true);
   $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
-  console.log("Strike Swapped: Striker -", striker, "Non-Striker -", nonStriker);
 }
 
-function saveBowlerName() {
-  scoreboardInfo[over_no - 1] = scoreboardInfo[over_no - 1] || {};
-  scoreboardInfo[over_no - 1].bowler = currentBowler;
+function updateScoreDisplay() {
+  $("#run").text(runs);
+  $("#wickets").text(wickets);
 }
 
-function update_runboard() {
-  const overBallDisplay = `${over_no - 1}.${ball_no - 1}`;
-  updateHtml("#over-ball", overBallDisplay);
-  updateTarget();
+function updateRunboardDisplay() {
+  $("#over-ball").text(`${over_no - 1}.${ball_no - 1}`);
 }
 
-function change_score() { /* ... (You might need to adapt this for batsman-specific scores) */ }
-
-function update_scoreboard_modal() {
+function updateScoreboardModal() {
   const tableBody = $("#scoreboard-body");
   tableBody.empty();
-  console.log("Updating scoreboard modal. Batsmen Stats:", batsmenStats);
 
   for (const batsman in batsmenStats) {
     const stats = batsmenStats[batsman];
-    if (stats.runs !== undefined) {
+    if (battingTeamPlayers.includes(batsman)) {
       const row = $("<tr></tr>");
       row.append(`<td>${batsman} ${stats.status === 'out' && stats.bowler ? '<small>b ' + stats.bowler + '</small>' : ''}</td>`);
       row.append(`<td>${stats.runs}</td>`);
@@ -274,57 +266,23 @@ function update_scoreboard_modal() {
   const bowlerStatsBody = $("#bowler-stats-body");
   bowlerStatsBody.empty();
   for (const bowler in bowlersStats) {
-    const stats = bowlersStats[bowler];
-    if (stats.runsConceded !== undefined) {
-      const oversBowled = Math.floor(stats.overs) + (ball_no > 1 && scoreboardInfo[over_no -1]?.bowler === bowler ? (ball_no - 1) / 6 : 0);
+    if (bowlingTeamPlayers.includes(bowler)) {
+      const stats = bowlersStats[bowler];
+      const oversBowled = Math.floor(stats.overs) + (scoreboardInfo[over_no - 1]?.bowler === bowler && ball_no > 1 ? (ball_no - 1) / 6 : 0);
+      const runsInOver = scoreboard[over_no]?.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0) || 0;
+      stats.runsConceded += (scoreboardInfo[over_no - 1]?.bowler === bowler ? runsInOver : 0);
+      stats.overs = over_no - 1 + (ball_no > 1 && scoreboardInfo[over_no - 1]?.bowler === bowler ? (ball_no - 1) / 6 : 0);
+
       const row = $("<tr></tr>");
       row.append(`<td>${bowler}</td>`);
-      row.append(`<td>${oversBowled.toFixed(1)}</td>`);
+      row.append(`<td>${stats.overs.toFixed(1)}</td>`);
       row.append(`<td>${stats.maidens}</td>`);
       row.append(`<td>${stats.runsConceded}</td>`);
       row.append(`<td>${stats.wicketsTaken}</td>`);
-      row.append(`<td>${oversBowled > 0 ? (stats.runsConceded / oversBowled).toFixed(2) : '0.00'}</td>`);
+      row.append(`<td>${stats.overs > 0 ? (stats.runsConceded / stats.overs).toFixed(2) : '0.00'}</td>`);
       bowlerStatsBody.append(row);
     }
   }
 
   $('#myModal').modal('show');
-  if (isShareMode) { updateHtml("#scoreboard", $("#scoreboard").prop('outerHTML'), false); }
-  else { updateHtml("#scoreboard", $("#scoreboard").prop('outerHTML'), true); }
 }
-
-function update_score_display() {
-  runs = 0;
-  wickets = 0;
-  for (const batsman in batsmenStats) {
-    runs += batsmenStats[batsman].runs;
-    if (batsmenStats[batsman].status === 'out') {
-      wickets++;
-    }
-  }
-  updateHtml("#run", runs);
-  updateHtml("#wickets", wickets);
-}
-
-function back_button() { /* ... (Needs significant update to handle batsman stats) */ }
-function noBall(is_NoBall) {
-  isNoBall = is_NoBall;
-  if (isNoBall) {
-    $("#no-ball-warning").show();
-  } else {
-    $("#no-ball-warning").hide();
-  }
-}
-function setTarget(isTargetModeOn = true) { /* ... */ }
-function updateTarget() { /* ... */ }
-function updateHtml(eleId, newHtml, shouldPublish = true) {
-  $(eleId).html(newHtml);
-  if (isShareMode && shouldPublish) {
-    publishUpdate({ type: "updateHtml", id: eleId.substring(1), html: newHtml });
-  }
-}
-function sendInitVariables() { /* ... */ }
-function onConnect() { /* ... */ }
-function onConnectionLost(responseObject) { /* ... */ }
-function onMessageArrived(message) { /* ... */ }
-function publishUpdate(payload) { /* ... */ }
