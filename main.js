@@ -73,6 +73,8 @@ function saveTeamData() {
     populateBowlerDropdown();
 
     setInitialBatsmen();
+    updateScoreDisplay();
+    updateRunboardDisplay();
 
     $('#initialSetupModal').modal('hide');
   } else {
@@ -179,7 +181,6 @@ function playBall(outcome) {
   }
 
   updateRunboardDisplay();
-  updateScoreboardModal();
   populateBatsmanDropdowns(); // Update dropdowns after each ball (for out players)
 }
 
@@ -199,10 +200,10 @@ function handleWicket() {
     const newBatsman = availableBatsmen[0];
     if (striker) {
       nonStriker = newBatsman;
-      $("#nonStrikerBatsman").val(nonStriker).prop('selected', true);
+      $("#nonStrikerBatsman").val(newBatsman).prop('selected', true);
     } else {
       striker = newBatsman;
-      $("#strikerBatsman").val(striker).prop('selected', true);
+      $("#strikerBatsman").val(newBatsman).prop('selected', true);
     }
   } else {
     if (striker) batsmenStats[striker].status = "out"; // Mark remaining as out?
