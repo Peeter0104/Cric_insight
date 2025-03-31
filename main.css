@@ -53,7 +53,6 @@ body {
     justify-content: center;
     margin: 5px;
 }
-
 .over-ball-style.bowled {
     background-color: #007bff; /* Example: Blue for bowled balls */
     color: white;
