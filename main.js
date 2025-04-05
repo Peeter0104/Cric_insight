@@ -160,7 +160,7 @@ function playBall(outcome) {
         wickets++;
         updateScoreDisplay();
         handleWicket();
-        // Increment ball counters ONLY for a legal delivery resulting in a wicket
+        // Increment ball counters for a legal delivery resulting in a wicket
         if (!isNoBall) {
             batsmenStats[striker].balls++;
             ballsBowledThisOver++;
