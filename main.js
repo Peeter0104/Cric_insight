@@ -160,7 +160,15 @@ function playBall(outcome) {
         wickets++;
         updateScoreDisplay();
         handleWicket();
-        endOfBall();
+        // End of ball logic is now after handling the wicket
+        batsmenStats[striker].balls++;
+        ballsBowledThisOver++;
+        ball_no++;
+        if (ball_no > 6) {
+            endOfOver();
+        }
+        updateRunboardDisplay();
+        populateBatsmanDropdowns(); // Update dropdowns after each ball
     } else if (typeof outcome === 'number') {
         batsmenStats[striker].runs += outcome;
         runs += outcome;
@@ -174,12 +182,15 @@ function playBall(outcome) {
         endOfBall();
     }
 
-    if (outcome !== "Wd" && !isNoBall && outcome !== "Out") {
-        batsmenStats[striker].balls++;
-        ballsBowledThisOver++;
-        ball_no++;
-        if (ball_no > 6) {
-            endOfOver();
+    // Increment ball count for valid deliveries (including outs)
+    if (outcome !== "Wd" && !isNoBall) {
+        if (outcome !== "Out") { // Ball is already incremented for "Out" above
+            batsmenStats[striker].balls++;
+            ballsBowledThisOver++;
+            ball_no++;
+            if (ball_no > 6) {
+                endOfOver();
+            }
         }
     } else if (isNoBall && typeof outcome === 'number') {
         batsmenStats[striker].balls++; // No ball still counts as a ball faced for batsman if runs are scored
