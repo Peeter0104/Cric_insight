@@ -160,12 +160,14 @@ function playBall(outcome) {
         wickets++;
         updateScoreDisplay();
         handleWicket();
-        // End of ball logic is now after handling the wicket
-        batsmenStats[striker].balls++;
-        ballsBowledThisOver++;
-        ball_no++;
-        if (ball_no > 6) {
-            endOfOver();
+        // Increment ball counters ONLY for a legal delivery resulting in a wicket
+        if (!isNoBall) {
+            batsmenStats[striker].balls++;
+            ballsBowledThisOver++;
+            ball_no++;
+            if (ball_no > 6) {
+                endOfOver();
+            }
         }
         updateRunboardDisplay();
         populateBatsmanDropdowns(); // Update dropdowns after each ball
@@ -178,13 +180,8 @@ function playBall(outcome) {
         updateScoreDisplay();
         handleRun(outcome);
         endOfBall();
-    } else if (outcome === 0) {
-        endOfBall();
-    }
-
-    // Increment ball count for valid deliveries (including outs)
-    if (outcome !== "Wd" && !isNoBall) {
-        if (outcome !== "Out") { // Ball is already incremented for "Out" above
+        // Increment ball counters for a legal delivery with runs
+        if (!isNoBall) {
             batsmenStats[striker].balls++;
             ballsBowledThisOver++;
             ball_no++;
@@ -192,11 +189,21 @@ function playBall(outcome) {
                 endOfOver();
             }
         }
-    } else if (isNoBall && typeof outcome === 'number') {
-        batsmenStats[striker].balls++; // No ball still counts as a ball faced for batsman if runs are scored
-        isNoBall = false;
-        $("#no-ball-warning").hide();
-    } else if (isNoBall && outcome === 0) {
+    } else if (outcome === 0) {
+        endOfBall();
+        // Increment ball counters for a legal dot ball
+        if (!isNoBall) {
+            batsmenStats[striker].balls++;
+            ballsBowledThisOver++;
+            ball_no++;
+            if (ball_no > 6) {
+                endOfOver();
+            }
+        }
+    }
+
+    // Reset no-ball flag after processing the outcome
+    if (isNoBall && outcome !== "Wd" && outcome !== "Nb") {
         isNoBall = false;
         $("#no-ball-warning").hide();
     }
